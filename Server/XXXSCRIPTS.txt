@@ -1,0 +1,6 @@
+[Migrations--------]
+alembic revision --autogenerate -m "Message"
+python -m alembic upgrade head
+
+[RUN API-----------]
+uvicorn main:app --reload           
