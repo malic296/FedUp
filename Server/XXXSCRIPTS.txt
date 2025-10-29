@@ -3,4 +3,9 @@ alembic revision --autogenerate -m "Message"
 python -m alembic upgrade head
 
 [RUN API-----------]
-uvicorn main:app --reload           
+uvicorn main:app --reload  
+
+[REGENERATE API ---]
+(Creates openapi.json file which describes our api -> works for client generation)
+curl http://127.0.0.1:8000/openapi.json -o "C:\Users\janma\source\repos\FedUp\Server\openapi.json" 
+openapi-generator-cli generate -i openapi.json -g dart-dio -o ../client_api
