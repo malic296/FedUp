@@ -9,11 +9,10 @@ scheduler = BackgroundScheduler()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     fetcher = NewsFetcher()
-    scheduler.add_job(fetcher.testFetcher, "interval", minutes=10)
+    scheduler.add_job(fetcher.fetch_news_from_API, "interval", minutes=10)
     scheduler.start()
     print(datetime.now())
-    
-    yield  
+    yield
 
     scheduler.shutdown()
     print("Scheduler stopped")
