@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import List
 
 class IAIService(ABC):
     @abstractmethod
-    def generateAIDescription(self, text: str) -> str:
+    def generateNewsDependencies(self, news: List[str]):
         pass

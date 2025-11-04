@@ -8,6 +8,7 @@ class News(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     author = Column(String)
+    language = Column(String)
     title = Column(String)
     description = Column(String)
     link = Column(String)
