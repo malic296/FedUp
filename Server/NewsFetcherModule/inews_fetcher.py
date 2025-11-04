@@ -2,5 +2,5 @@ from abc import ABC, abstractmethod
 
 class INewsFetcher(ABC):
     @abstractmethod
-    def testFetcher(self) -> None:
+    def fetch_news_rss(self) -> None:
         pass
