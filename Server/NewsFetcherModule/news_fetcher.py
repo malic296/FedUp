@@ -1,61 +1,47 @@
 import os
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 import requests
-import traceback
 from .inews_fetcher import INewsFetcher
+from datetime import datetime, timedelta, timezone
 
 class NewsFetcher(INewsFetcher):
-    """
-    Concrete implementation of INewsFetcher that fetches latest news
-    from TheNewsAPI (/v1/news/top) and returns minimal info for each article.
-    """
 
-    def fetch_news_from_API(self, limit: int = 1):
-        """
-        Fetch latest articles from TheNewsAPI /v1/news/top.
-
-        Reads `THENEWSAPI_KEY` from Server/server.env or environment.
-        Returns a list of articles with minimal fields: title, description, link, publicationDate.
-        """
-
+    def fetch_news_from_API(self):
         # Load environment variables from server.env
-        env_path = os.path.normpath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "server.env")
-        )
-        if os.path.exists(env_path):
-            load_dotenv(env_path)
+        load_dotenv(find_dotenv("server.env"))
+        api_key = os.getenv("THENEWSAPI_KEY")
+        url = os.getenv("API_URL")
 
-        api_key = os.getenv("THENEWSAPI_KEY") or os.getenv("NEWSAPI_KEY")
-        if not api_key:
-            return {"error": "THENEWSAPI_KEY not set"}
-
-        # TheNewsAPI endpoint and query parameters
-        url = "https://api.thenewsapi.com/v1/news/top"
-        params = {"api_token": api_key, "limit": limit}
+        published_from = (datetime.now(timezone.utc) - timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%S")
+        params = {"api_token": api_key, "language": "en,cs", "published_after": published_from, "limit" : 1}
 
         # Make the HTTP request and handle errors
         try:
             resp = requests.get(url, params=params, timeout=15)
             resp.raise_for_status()
             payload = resp.json()
-        except requests.RequestException as e:
-            return {"error": f"HTTP error: {e}", "trace": traceback.format_exc()}
-        except ValueError as e:
-            return {"error": f"JSON decode error: {e}", "trace": traceback.format_exc()}
+        except Exception:
+            return []
 
         # Extract articles from response
         items = payload.get("data") or payload.get("articles") or []
         if not items:
-            return {"error": "No articles returned", "raw": payload}
+            return []
 
         # Map only minimal information
         result = []
         for a in items:
             result.append({
-                "title": a.get("title") or a.get("headline") or "",
-                "description": a.get("description") or a.get("excerpt") or "",
-                "link": a.get("url") or a.get("link") or "",
-                "publicationDate": a.get("published_at")
+                "author": a.get("source"),
+                "title": a.get("title"),
+                "description": a.get("description") or a.get("excerpt"),
+                "link": a.get("url") or a.get("link"),
+                "publicationDate": a.get("published_at"),
+                "language": a.get("language")
             })
+
+        for x in result:
+            print(x)
+
         return result

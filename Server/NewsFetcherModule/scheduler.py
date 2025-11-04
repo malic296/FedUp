@@ -12,6 +12,8 @@ async def lifespan(app: FastAPI):
     scheduler.add_job(fetcher.fetch_news_from_API, "interval", minutes=10)
     scheduler.start()
     print(datetime.now())
+    news = fetcher.fetch_news_from_API()
+
     yield
 
     scheduler.shutdown()
