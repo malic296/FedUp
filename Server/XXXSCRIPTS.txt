@@ -1,9 +1,9 @@
 [Migrations--------]
 alembic revision --autogenerate -m "Message"
-python -m alembic upgrade head
+C:\Users\janma\AppData\Local\Programs\Python\Python313\python.exe -m alembic upgrade head
 
 [RUN API-----------]
-uvicorn main:app --reload  
+uvicorn main:app --reload  OR RUN FROM FEDUP FOLDER uvicorn Server.main:app --reload
 
 [REGENERATE API ---]
 (Creates openapi.json file which describes our api -> works for client generation)

@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
-from APIModule.Controllers.users_controller import router as users_router
-from APIModule.Controllers.news_controller import router as news_router
-from NewsFetcherModule.scheduler import lifespan
+from .APIModule.Controllers.users_controller import router as users_router
+from .APIModule.Controllers.news_controller import router as news_router
+from Server.NewsFetcherModule.scheduler import lifespan
 from fastapi.middleware.cors import CORSMiddleware 
 
 app = FastAPI(lifespan=lifespan)

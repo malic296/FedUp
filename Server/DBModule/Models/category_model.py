@@ -8,7 +8,7 @@ class Category(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     category = Column(String, nullable=False)
-    categoryEmbedding = Column(Vector(1500), index=True)
+    categoryEmbedding = Column(Vector(768))
 
     news = relationship("News", back_populates="category")
     users = relationship("User_Category", back_populates="category")

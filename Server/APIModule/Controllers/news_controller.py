@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from ..Services.news_service import NewsService
+from Server.APIModule.Services.news_service import NewsService
 
 router = APIRouter()
 news_service = NewsService()

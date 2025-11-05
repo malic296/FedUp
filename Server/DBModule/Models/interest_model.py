@@ -7,6 +7,6 @@ class Interest(Base):
     __tablename__ = "Interest"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    interestEmbedding = Column(Vector(1500), index=True)
+    interestEmbedding = Column(Vector(768))
 
     users = relationship("User_Interest", back_populates="interest")

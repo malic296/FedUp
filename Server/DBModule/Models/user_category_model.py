@@ -9,5 +9,5 @@ class User_Category(Base):
     userId = Column(Integer, ForeignKey("User.id"))
     categoryId = Column(Integer, ForeignKey("Category.id"))
 
-    user = relationship("User", back_populates="category")
+    user = relationship("User", back_populates="categories")
     category = relationship("Category", back_populates="users")

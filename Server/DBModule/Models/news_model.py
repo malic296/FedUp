@@ -14,7 +14,7 @@ class News(Base):
     link = Column(String)
     publicationDate = Column(DateTime)
     aiGeneratedText = Column(String, index=True)
-    Embedding = Column(Vector(1500), index=True)
+    Embedding = Column(Vector(768))
     validationText = Column(String, nullable=True, index=True)
     categoryId = Column(Integer, ForeignKey("Category.id"))
 
