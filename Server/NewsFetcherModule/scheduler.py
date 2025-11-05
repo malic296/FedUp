@@ -10,11 +10,14 @@ scheduler = BackgroundScheduler()
 async def lifespan(app: FastAPI):
     fetcher = NewsFetcher()
     scheduler.add_job(fetcher.fetch_news_from_API, "interval", minutes=10)
+    scheduler.add_job(fetcher.fetch_news_rss, "interval", minutes=10)
     scheduler.start()
     print(datetime.now())
     news = fetcher.fetch_news_from_API()
+    fetcher.fetch_news_rss()
 
     yield
+    
 
     scheduler.shutdown()
     print("Scheduler stopped")
