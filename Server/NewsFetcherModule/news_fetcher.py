@@ -52,13 +52,13 @@ class NewsFetcher(INewsFetcher):
          
         self.ai_service.generateNewsDependencies(result)
 
-    def fetch_news_rss(self) -> list:
+    def fetch_news_rss(self) -> None:
         """ 
         Fetch news articles from various RSS feeds.
         Returns a list of news items with details such as title, description, link, publication date, author, language, and category.
         """
         
-        howOld = datetime.timedelta(minutes=10)  # how old news can be to be fetched
+        howOld = timedelta(minutes=1000)  # how old news can be to be fetched
         debug = False # Enable debug output, for debuging is recommended to set howOld to a higher value like hours=1
 
         if debug: print("Debugging is enabled")
@@ -114,8 +114,8 @@ class NewsFetcher(INewsFetcher):
 
                 if not hasattr(entry, 'published_parsed'): continue # skip entries without published date
 
-                published = datetime.datetime(*entry.published_parsed[:6]) #parsing published date and packing it into formated string
-                if published < datetime.datetime.now() - howOld: continue # skip old news
+                published = datetime(*entry.published_parsed[:6]) #parsing published date and packing it into formated string
+                if published < datetime.now() - howOld: continue # skip old news
 
                 # get attributes with defaults
                 summary = getattr(entry, "summary", "") or entry.get("summary", "")
@@ -138,11 +138,10 @@ class NewsFetcher(INewsFetcher):
                 })
 
                 if debug: print(result[counter-1])
-        
-        return result
+
+        print(len(result))
+        self.ai_service.generateNewsDependencies(result[:5])
                     
-
-
     #Helper method to parse credit source from url
     def parseUrl(self, raw_link: str) -> str:
         """

@@ -85,7 +85,7 @@ class AIService(IAIService):
             x["aiGeneratedText"] = summary
 
             # Create news embeddings -> translate to en
-            if x["language"] != "en":
+            if "en" not in x["language"]:
                 title_en = translate_text(x["title"], x["language"])
                 desc_en = translate_text(x["description"], x["language"])
                 
