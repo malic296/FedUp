@@ -8,6 +8,7 @@ from .inews_fetcher import INewsFetcher
 from datetime import datetime, timedelta, timezone
 from deep_translator import GoogleTranslator
 from Server.AIModule.ai_service import AIService
+from Server.DBModule.db_service import DBService
 
 class NewsFetcher(INewsFetcher):
     def __init__(self):
@@ -17,6 +18,7 @@ class NewsFetcher(INewsFetcher):
         load_dotenv(dotenv_path=env_path, override=True)
         load_dotenv(find_dotenv("server.env"))
         self.ai_service = AIService()
+        self.db_service = DBService()
 
     def fetch_news_from_API(self):
         api_key = os.getenv("THENEWSAPI_KEY")
@@ -49,3 +51,9 @@ class NewsFetcher(INewsFetcher):
             })
          
         self.ai_service.generateNewsDependencies(result)
+
+    def fetch_news(self):
+        all_news = self.db_service.get_news()
+        for news in all_news:
+            print(f"Title: {news.title}, Upvotes: {news.upvotes_count}")
+        return all_news

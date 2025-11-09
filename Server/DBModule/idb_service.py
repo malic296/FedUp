@@ -23,3 +23,7 @@ class IDBService(ABC):
     @abstractmethod
     def getNewsValidation(self, newsId : int) -> str:
         pass
+
+    @abstractmethod
+    def get_news(self) -> List[News]:
+        pass

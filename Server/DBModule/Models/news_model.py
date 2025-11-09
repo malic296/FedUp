@@ -20,3 +20,7 @@ class News(Base):
 
     category = relationship("Category", back_populates="news")
     upvotes = relationship("Upvotes", back_populates="news")
+
+    @property
+    def upvotes_count(self) -> int:
+        return len(self.upvotes) if self.upvotes else 0

@@ -27,7 +27,6 @@ class DBService(IDBService):
             query = select(Category.id).where(Category.category == category)
             return db.execute(query).scalar_one_or_none()
 
-            
     def create_category(self, category : Category) -> int:
         with self.get_db() as db:
             query = select(Category.id).where(Category.category == category.category)
@@ -54,3 +53,10 @@ class DBService(IDBService):
 
     def getNewsValidation(self, newsId : int):
         return str(newsId)
+        
+    def get_news(self) -> List[News]:
+        with self.get_db() as db:
+            query = select(News)
+            result: List[News] = db.execute(query).scalars().all()
+            result.sort(key=lambda x: x.upvotes_count, reverse=True)   
+            return result    
