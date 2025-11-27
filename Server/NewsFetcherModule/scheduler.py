@@ -14,7 +14,7 @@ async def lifespan(app: FastAPI):
     scheduler.start()
     print(datetime.now())
     #news = fetcher.fetch_news_from_API()
-    fetcher.fetch_news_rss()
+    #fetcher.fetch_news_rss()
 
     yield
     
