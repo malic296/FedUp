@@ -1,12 +1,12 @@
 import 'package:test/test.dart';
-import 'package:openapi/openapi.dart';
+import 'package:client/api/generated/api.dart';
 
 
 /// tests for UsersApi
 void main() {
   final instance = Openapi().getUsersApi();
 
-  group(UsersApi, () {
+  group(instance, () {
     // Getusername
     //
     //Future<JsonObject> getUsernameUsersGet() async

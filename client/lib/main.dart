@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:openapi/openapi.dart';
+import 'package:client/api/generated/openapi.dart';
 import 'package:dio/dio.dart';
+import 'package:provider/provider.dart';
+import 'features/posts/presentation/screens/home_screen.dart';
+import 'features/posts/presentation/viewmodels/post_view_model.dart';
+import 'features/posts/presentation/viewmodels/account_view_model.dart';
 
 void main() => runApp(const MyApp());
 
@@ -14,7 +18,7 @@ class MyApp extends StatelessWidget {
   //   - Physical device LAN  → http://<YOUR_PC_IP>:8000
   // -------------------------------------------------------------
   static final _openapi = Openapi(
-    basePathOverride: 'http://10.0.2.2:8000', // change if needed
+    basePathOverride: 'http://127.0.0.1:8000', // change if needed
   );
 
   static final UsersApi _usersApi = _openapi.getUsersApi();
@@ -22,15 +26,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'OpenAPI Test',
-      home: Scaffold(
-        appBar: AppBar(title: const Text('API Test')),
-        backgroundColor: Colors.grey[200],
-        body: ApiDemoWidget(
-          usersApi: _usersApi,
-          newsApi: _newsApi,
+    return MultiProvider(
+      providers: [
+        // Zaregistrujeme View Model
+        ChangeNotifierProvider(create: (_) => PostViewModel()),
+        
+        // ZAREGISTRUJEME NOVÝ VIEW MODEL PRO ÚČET
+        ChangeNotifierProvider(create: (_) => AccountViewModel()),
+      ],
+      child: MaterialApp(
+        title: 'FedUp App',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
         ),
+        home: const HomeScreen(),
       ),
     );
   }

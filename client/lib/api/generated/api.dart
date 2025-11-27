@@ -4,13 +4,13 @@
 
 import 'package:dio/dio.dart';
 import 'package:built_value/serializer.dart';
-import 'package:openapi/src/serializers.dart';
-import 'package:openapi/src/auth/api_key_auth.dart';
-import 'package:openapi/src/auth/basic_auth.dart';
-import 'package:openapi/src/auth/bearer_auth.dart';
-import 'package:openapi/src/auth/oauth.dart';
-import 'package:openapi/src/api/news_api.dart';
-import 'package:openapi/src/api/users_api.dart';
+import 'package:client/api/generated/serializers.dart';
+import 'package:client/api/generated/auth/api_key_auth.dart';
+import 'package:client/api/generated/auth/basic_auth.dart';
+import 'package:client/api/generated/auth/bearer_auth.dart';
+import 'package:client/api/generated/auth/oauth.dart';
+import 'package:client/api/generated/api/news_api.dart';
+import 'package:client/api/generated/api/users_api.dart';
 
 class Openapi {
   static const String basePath = r'http://localhost';

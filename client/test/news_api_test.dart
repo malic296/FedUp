@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import 'package:openapi/openapi.dart';
+import 'package:client/api/generated/openapi.dart';
 
 
 /// tests for NewsApi
