@@ -1,0 +1,79 @@
+{% extends "layouts/main.html" %}
+{% block title %} Profile Settings {% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container">
+        <h1 class="title">Profil uživatele</h1>
+        <hr>
+
+        <div class="columns">
+            <div class="column is-4">
+                <div class="box">
+                    <h3 class="subtitle is-5">Momentální údaje</h3>
+                    <p><strong>Přihlašovací jméno:</strong> {{ user.username }}</p>
+                    <p><strong>Emailová adresa:</strong> {{ user.email }}</p>
+                </div>
+            </div>
+
+            <div class="column is-8">
+                <div class="box">
+                    <h3 class="subtitle is-5">Aktualizovat přihlašovací údaje</h3>
+                    <form method="POST" action="{{ url_for('user.profile') }}">
+                        {{ form.hidden_tag() }}
+
+                        <div class="field">
+                            <label class="label">Momentální heslo <span class="has-text-danger">*</span></label>
+                            <div class="control has-icons-left">
+                                {{ form.old_password(class="input", placeholder="Momentální heslo") }}
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-lock"></i>
+                                </span>
+                            </div>
+                            <p class="help">Povinný údaj.</p>
+                        </div>
+
+                        <div class="columns">
+                            <div class="column">
+                                <div class="field">
+                                    <label class="label">Nové uživatelské jméno</label>
+                                    <div class="control">
+                                        {{ form.new_username(class="input", placeholder="Není povinné.") }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="columns">
+                            <div class="column">
+                                <div class="field">
+                                    <label class="label">Nové heslo</label>
+                                    <div class="control">
+                                        {{ form.new_password(class="input", placeholder="Není povinné.") }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column">
+                                <div class="field">
+                                    <label class="label">Potvrzení nového hesla</label>
+                                    <div class="control">
+                                        {{ form.new_password_integrity(class="input", placeholder="Není povinné.") }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="field mt-5">
+                            <div class="control">
+                                <button type="submit" class="button is-primary is-fullwidth">
+                                    <strong>Aktualizovat údaje</strong>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

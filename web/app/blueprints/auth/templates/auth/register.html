@@ -1,0 +1,69 @@
+{% extends "layouts/auth.html" %}
+{% block title %} Registrace {% endblock %}
+
+{% block content %}
+<div class="columns is-centered">
+    <div class="column is-5">
+        <div class="box">
+            <h1 class="title is-3 has-text-centered is-uppercase">Registrace</h1>
+
+            <form method="POST">
+                {{ form.csrf_token }}
+
+                <div class="field">
+                    <label class="label ">{{ form.username.label.text }}</label>
+                    <div class="control has-icons-left">
+                        {{ form.username(class="input is-primary is-outlined", placeholder="Zvolte si přezdívku") }}
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-user"></i>
+                        </span>
+                    </div>
+                    {% if form.username.errors %}
+                        <p class="help is-danger">{{ form.username.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="field">
+                    <label class="label ">{{ form.email.label.text }}</label>
+                    <div class="control has-icons-left">
+                        {{ form.email(class="input is-primary is-outlined", placeholder="vas@email.cz") }}
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-envelope"></i>
+                        </span>
+                    </div>
+                    {% if form.email.errors %}
+                        <p class="help is-danger">{{ form.email.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="field">
+                    <label class="label ">{{ form.password.label.text }}</label>
+                    <div class="control has-icons-left">
+                        {{ form.password(class="input is-primary is-outlined", placeholder="Vytvořte si silné heslo") }}
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-lock"></i>
+                        </span>
+                    </div>
+                    {% if form.password.errors %}
+                        <p class="help is-danger">{{ form.password.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="field mt-5">
+                    <div class="control">
+                        <button type="submit" class="button is-primary is-outlined is-fullwidth is-uppercase">
+                            <strong>Registrovat se</strong>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <footer class="mt-4 has-text-centered">
+                <p class="is-size-7">
+                    Již máte účet? <a href="{{ url_for('auth.login') }}" class="has-text-primary">Přihlaste se zde</a>
+                </p>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}

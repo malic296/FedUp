@@ -1,0 +1,56 @@
+{% macro render_article(article) %}
+<article class="article-detail">
+    <header class="mb-6">
+        <div class="tags are-medium mb-3">
+            <a href="{{ article.channel_link }}" target="_blank" class="tag is-primary">{{ article.channel_link }}</a>
+            <span class="tag">
+                {{ article.pub_date.strftime('%d.%m.%Y %H:%M') if article.pub_date else 'Nedávno' }}
+            </span>
+        </div>
+
+        <h1 class="title is-1 mb-5">{{ article.title }}</h1>
+
+        <div class="level is-mobile">
+            <div class="level-left">
+                <div class="level-item">
+                    <span>
+                        <span class="icon"><i class="fas fa-heart"></i></span>
+                        {{ article.likes }} To se mi líbí
+                    </span>
+                </div>
+            </div>
+            <div class="level-right">
+                 <div class="level-item">
+                    <a href="{{ article.link }}" target="_blank" rel="noopener noreferrer" class="button is-primary is-rounded has-text-weight-bold">
+                        <span>Přečíst celý článek</span>
+                        <span class="icon"><i class="fas fa-external-link-alt"></i></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <hr style="background-color: #333; height: 1px;">
+
+    <div class="content is-medium py-4" style="line-height: 1.8;">
+        {{ article.description | safe }}
+    </div>
+
+    <footer class="mt-6 pt-6">
+        <div class="columns is-vcentered">
+            <div class="column">
+                <p class="is-size-7">
+                    Zdroj: <strong>{{ article.channel_link }}</strong><br>
+                    Publikováno: {{ article.pub_date }}
+                </p>
+            </div>
+            <div class="column has-text-right">
+                <p class="is-size-7">
+                    Chcete reagovat? <a href="{{ url_for('auth.login') }}" class="has-text-primary">Přihlaste se</a>
+                </p>
+            </div>
+        </div>
+    </footer>
+</article>
+
+{% endmacro %}

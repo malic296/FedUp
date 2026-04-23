@@ -1,0 +1,36 @@
+{% extends "layouts/main.html" %}
+{% from "macros/article.html" import render_article %}
+
+{% block title %} 
+    {% if article %}{{ article.title }}{% else %}Zpráva nenalezena{% endif %}
+{% endblock %}
+
+{% block content %}
+<section class="section">
+    <div class="container is-max-desktop">
+        
+        {% if not article %}
+            <div class="notification is-warning is-light has-text-centered py-6">
+                <span class="icon is-large has-text-warning"><i class="fas fa-exclamation-triangle fa-2x"></i></span>
+                <h1 class="title is-4 mt-4">Zpráva nenalezena</h1>
+                <p class="mb-5">Omlouváme se, ale tato zpráva již neexistuje nebo byla přesunuta.</p>
+                <a href="{{ url_for('main.articles') }}" class="button is-primary is-rounded">
+                    Zpět na hlavní výpis
+                </a>
+            </div>
+        {% else %}
+            <nav class="breadcrumb mb-5" aria-label="breadcrumbs">
+                <ul>
+                    <li><a href="{{ url_for('main.articles') }}">
+                        <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
+                        <span>Zpět na stream</span>
+                    </a></li>
+                </ul>
+            </nav>
+
+            {{ render_article(article) }}
+        {% endif %}
+
+    </div>
+</section>
+{% endblock %}

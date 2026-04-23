@@ -1,0 +1,31 @@
+{% macro render_flash_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages-container mb-5">
+                <div class="columns is-centered">
+                    <div class="column is-8-tablet is-10-mobile">
+                        {% for category, message in messages %}
+                            {# Bulma categories: info, success, warning, danger #}
+                            {% set bulma_type = category if category != 'message' else 'info' %}
+                            <div class="notification is-{{ bulma_type }} is-light animate__animated animate__fadeInDown mb-3" 
+                                 style="box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                                <button class="delete"></button>
+                                <div class="is-flex is-align-items-center">
+                                    <span class="icon mr-2">
+                                        <i class="fas 
+                                            {% if bulma_type == 'success' %}fa-check-circle
+                                            {% elif bulma_type == 'danger' %}fa-exclamation-triangle
+                                            {% elif bulma_type == 'warning' %}fa-exclamation-circle
+                                            {% else %}fa-info-circle{% endif %}">
+                                        </i>
+                                    </span>
+                                    <span>{{ message }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endwith %}
+{% endmacro %}

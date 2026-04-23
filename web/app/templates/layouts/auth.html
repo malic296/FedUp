@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="cs" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/css/bulma.min.css">
+    <link rel="stylesheet" href="/static/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>{% block title %}{% endblock %} | FedUp</title>
+    {% from "macros/flash.html" import render_flash_messages %}
+</head>
+<body>
+    <nav class="navbar is-black is-spaced has-shadow" role="navigation">
+        <div class="container">
+            <div class="navbar-brand">
+                <a class="navbar-item" href="{{ url_for('auth.index') }}">
+                    <span class="title is-4 has-text-primary is-uppercase">FedUp</span>
+                </a>
+                <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarAuth">
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                </a>
+            </div>
+
+            <div id="navbarAuth" class="navbar-menu">
+                <div class="navbar-end">
+                    <div class="navbar-item">
+                        <div class="buttons">
+                            <a href="{{ url_for('auth.index') }}" class="button is-dark is-primary is-outlined">
+                                <span class="icon"><i class="fas fa-home"></i></span>
+                                <span>Vítejte</span>
+                            </a>
+                            <a href="{{ url_for('auth.login') }}" class="button is-dark is-primary is-outlined">
+                                <span class="icon"><i class="fas fa-sign-in-alt"></i></span>
+                                <span>Přihlášení</span>
+                            </a>
+                            <a href="{{ url_for('auth.register') }}" class="button is-dark is-primary is-outlined">
+                                <span class="icon"><i class="fas fa-user-plus"></i></span>
+                                <span>Registrace</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="navbar-item">
+                        <button id="theme-toggle" class="button is-ghost">
+                            <span class="icon">
+                                <i class="fas fa-moon" id="theme-icon"></i>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="section">
+        <div class="container">
+            {{ render_flash_messages() }}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <script src="/static/js/brightness_mode.js"></script>
+    <script src="/static/js/flash_messages.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+  {% macro render_channels(channels) %}
+    <div class="table-container">
+        <table class="table is-fullwidth is-hoverable">
+            <thead>
+                <tr>
+                    <th>Název zdroje</th>
+                    <th>Odkaz</th>
+                    <th class="has-text-centered ">Stav</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for channel in channels %}
+                <tr>
+                    <td class="is-vcentered has-text-weight-semibold">
+                        <span class="icon is-small mr-2 has-text-primary">
+                            <i class="fas fa-rss-square"></i>
+                        </span>
+                        {{ channel.title }}
+                    </td>
+                    <td class="is-vcentered">
+                        <a href="{{ channel.link }}" target="_blank" class="is-size-7">
+                            {{ channel.link | truncate(40) }}
+                        </a>
+                    </td>
+                    <td class="has-text-centered is-vcentered">
+                        <label class="channel-toggle">
+                            <input type="checkbox"
+                                   name="disabled"
+                                   value="{{ channel.uuid }}"
+                                   class="hidden-checkbox"
+                                   {% if channel.disabled_by_user %}checked{% endif %}
+                                   onchange="syncToggle(this, '{{ channel.uuid }}')">
+
+                            <div id="btn-{{ channel.uuid }}"
+                                 class="button is-small is-uppercase has-text-weight-bold {{ 'is-dark is-outlined' if channel.disabled_by_user else 'is-primary' }}">
+                                <span class="icon is-small">
+                                    <i class="fas {{ 'fa-eye-slash' if channel.disabled_by_user else 'fa-eye' }}"></i>
+                                </span>
+                                <span class="btn-text">
+                                    {{ 'Vypnuto' if channel.disabled_by_user else 'Aktivní' }}
+                                </span>
+                            </div>
+                        </label>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+  {% endmacro %}

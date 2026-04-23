@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/css/bulma.min.css">
+    <link rel="stylesheet" href="/static/css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>{% block title %}{% endblock %} | FedUp</title>
+    {% from "macros/flash.html" import render_flash_messages %}
+</head>
+<body class="has-navbar-fixed-top">
+    <nav class="navbar is-fixed-top has-shadow" role="navigation" aria-label="main navigation">
+        <div class="container">
+            <div class="navbar-brand">
+                <a class="navbar-item" href="{{ url_for('main.articles') }}">
+                    <span class="title is-4 has-text-primary is-uppercase has-text-weight-bold">FedUp</span>
+                </a>
+                <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMain">
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                    <span aria-hidden="true"></span>
+                </a>
+            </div>
+
+            <div id="navbarMain" class="navbar-menu">
+                <div class="navbar-start">
+                    <a href="{{ url_for('main.articles') }}" class="navbar-item {{ 'is-active' if request.endpoint == 'main.articles' }}">
+                        <span class="icon"><i class="fas fa-newspaper"></i></span>
+                        <span>Články</span>
+                    </a>
+                    <a href="{{ url_for('main.channels') }}" class="navbar-item {{ 'is-active' if request.endpoint == 'main.channels' }}">
+                        <span class="icon"><i class="fas fa-rss"></i></span>
+                        <span>Kanály</span>
+                    </a>
+                </div>
+
+                <div class="navbar-end">
+                    <div class="navbar-item has-dropdown is-hoverable">
+                        <a class="navbar-link is-arrowless">
+                            <span class="icon"><i class="fas fa-user-circle"></i></span>
+                            <span>Můj účet</span>
+                        </a>
+
+                        <div class="navbar-dropdown is-right is-hidden-touch">
+                            <a href="{{ url_for('user.profile') }}" class="navbar-item">Profil</a>
+                            <hr class="navbar-divider">
+                            <a href="{{ url_for('user.logout') }}" class="navbar-item has-text-danger">Odhlásit se</a>
+                        </div>
+                    </div>
+                    <div class="navbar-item">
+                        <button id="theme-toggle" class="button is-ghost">
+                            <span class="icon">
+                                <i class="fas fa-moon" id="theme-icon"></i>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="section">
+        <div class="container">
+            {{ render_flash_messages() }}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <div id="share-modal" class="modal">
+          <div class="modal-background" onclick="closeShareModal()"></div>
+          <div class="modal-card" style="max-width: 400px;">
+                <header class="modal-card-head">
+                    <p class="modal-card-title is-size-6 is-uppercase">Sdílet zprávu</p>
+                    <button class="delete" aria-label="close" onclick="closeShareModal()"></button>
+                </header>
+                <section class="modal-card-body">
+                    <div class="field has-addons">
+                        <div class="control is-expanded">
+                            <input id="share-link-input" class="input" type="text" readonly>
+                        </div>
+                        <div class="control">
+                            <button id="copy-btn" class="button is-link" onclick="copyShareLink()">Kopírovat</button>
+                        </div>
+                    </div>
+                    <p id="copy-feedback" class="help is-success is-hidden">Odkaz byl zkopírován!</p>
+                </section>
+          </div>
+    </div>
+
+    <script src="/static/js/share.js"></script>
+    <script src="/static/js/articles.js"></script>
+    <script src="/static/js/channels.js"></script>
+    <script src="/static/js/brightness_mode.js"></script>
+    <script src="/static/js/flash_messages.js"></script>
+
+    {% block scripts %} {% endblock %}
+</body>
+</html>

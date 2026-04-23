@@ -1,0 +1,54 @@
+{% macro render_articles(articles) %}
+<div class="article-stream">
+    {% for article in articles %}
+        <div class="article-item mb-5 pb-5"
+             data-likes="{{ article.likes }}"
+             data-timestamp="{{ article.pub_date.timestamp() }}">
+
+            <div class="columns is-mobile">
+                <div class="column is-narrow has-text-centered px-4">
+                    <button class="button is-ghost p-0 {{ 'has-text-primary' if article.liked_by_user }}"
+                            onclick="doLike(this)"
+                            data-url="{{ url_for('main.like_article', uuid=article.uuid) }}">
+                        <span class="icon"><i class="{{ 'fas' if article.liked_by_user else 'far' }} fa-heart fa-lg"></i></span>
+                        <div class="is-size-7 like-count has-text-weight-bold" id="like-count-{{ article.uuid }}">{{ article.likes }}</div>
+                    </button>
+                </div>
+
+                <div class="column">
+                    <a href="{{ article.channel_link}}" target="_blank" >
+                        <div class="is-flex is-align-items-center mb-1">
+                            <span class="tag is-dark is-rounded is-small mr-2 has-text-primary">{{ article.channel_link }}</span>
+                            <span class="is-size-7">{{ article.pub_date.strftime('%d.%m.%Y %H:%M') }}</span>
+                        </div>
+                    </a>
+
+                    <h2 class="title is-5 mb-2">{{ article.title }}</h2>
+
+                    <div class="buttons">
+                        <button class="button is-ghost is-small p-0  mr-4 js-expand-btn">
+                            <span class="icon is-small"><i class="fas fa-align-left"></i></span>
+                            <span>Zobrazit popis</span>
+                        </button>
+
+                        <a href="{{ article.link }}" target="_blank" class="button is-ghost is-small p-0">
+                            <span class="icon is-small"><i class="fas fa-external-link-alt"></i></span>
+                            <span>Otevřít článek</span>
+                        </a>
+
+                        <button class="button is-ghost is-small p-0"
+                            onclick="openShareModal('{{ article.uuid }}')">
+                        <span class="icon is-small"><i class="fas fa-share"></i></span>
+                        <span>Sdílet</span>
+                    </button>
+                    </div>
+
+                    <div class="is-hidden mt-4 is-size-6 content box">
+                        {{ article.description | striptags }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endmacro %}

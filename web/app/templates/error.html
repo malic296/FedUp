@@ -1,0 +1,41 @@
+{% extends "layouts/auth.html" %}
+{% block title %} Nastala chyba {% endblock %}
+
+{% block content %}
+<div class="columns is-centered">
+    <div class="column is-6-tablet is-4-desktop has-text-centered">
+
+        <div class="section">
+            <span class="icon is-large has-text-danger mb-4">
+                <i class="fas fa-exclamation-triangle fa-3x"></i>
+            </span>
+            <h1 class="title is-2 is-uppercase">Něco se pokazilo</h1>
+            
+            <div class="notification is-danger is-light mt-5">
+                <p class="subtitle is-5">
+                    {{ message }}
+                </p>
+            </div>
+
+            <p class="mt-5">
+                Bez obav, není to vaše chyba. Zkuste stránku obnovit nebo se vraťte do bezpečí pomocí odkazů níže.
+            </p>
+
+            <hr class="my-6">
+
+            <nav class="buttons is-centered">
+                <a href="{{ url_for('auth.login') }}" class="button is-primary">
+                    <strong>Přihlásit se</strong>
+                </a>
+                <a href="{{ url_for('auth.register') }}" class="button is-primary">
+                    <strong>Zaregistrovat se</strong>
+                </a>
+                <a href="{{ url_for('auth.index') }}" class="button is-primary">
+                    <strong>Domů</strong>
+                </a>
+            </nav>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

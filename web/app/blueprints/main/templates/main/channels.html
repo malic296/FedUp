@@ -1,0 +1,50 @@
+{% extends "layouts/main.html" %}
+{% block title %} Kanály {% endblock %}
+{% from "macros/channels.html" import render_channels %}
+
+{% block content %}
+<style>
+    .hidden-checkbox {
+        display: none !important;
+    }
+
+    .channel-toggle {
+        cursor: pointer;
+        display: block;
+    }
+</style>
+
+<section class="section">
+    <div class="container is-max-desktop">
+        <div class="columns is-vcentered mb-5">
+            <div class="column">
+                <h1 class="title is-2 has-text-primary is-uppercase">Kanály</h1>
+                <p class="subtitle is-6">Spravujte zdroje, ze kterých odebíráte novinky.</p>
+            </div>
+        </div>
+
+        <div class="box shadow is-borderless">
+            <form method="POST" action="{{ url_for('main.channels') }}">
+                {{ form.hidden_tag() }}
+
+                {{ render_channels(channels) }}
+
+                <div class="field mt-5 has-text-right">
+                    <button type="submit" class="button is-primary is-outlined is-uppercase has-text-weight-bold">
+                        <span class="icon">
+                            <i class="fas fa-save"></i>
+                        </span>
+                        <span>Uložit změny</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {% if not channels %}
+        <div class="notification is-outlined has-text-centered mt-5">
+            <p>Žádné kanály k dispozici.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "layouts/auth.html" %}
+{% block title %} Ověření identity {% endblock %}
+
+{% block content %}
+<div class="columns is-centered">
+    <div class="column is-4">
+        <div class="box">
+            <h1 class="title is-3 has-text-centered is-uppercase">Zabezpečení</h1>
+            <p class="subtitle is-6 has-text-centered">
+                Zadejte ověřovací kód, který jsme zaslali na váš e-mail.
+            </p>
+
+            <form method="POST">
+                {{ form.csrf_token }}
+
+                <div class="field">
+                    <label class="label">{{ form.code.label.text }}</label>
+                    <div class="control has-icons-left">
+                        {{ form.code(class="input is-primary is-outlined", placeholder="Zadejte 6místný kód") }}
+                        <span class="icon is-small is-left">
+                            <i class="fas fa-shield-halved"></i>
+                        </span>
+                    </div>
+                    {% if form.code.errors %}
+                        <p class="help is-danger">{{ form.code.errors[0] }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="field mt-5">
+                    <div class="control">
+                        <button type="submit" class="button is-primary is-outlined is-fullwidth is-uppercase">
+                            <strong>Ověřit identitu</strong>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <footer class="mt-4 has-text-centered">
+                <p class="is-size-7">
+                    Kód nedorazil? <a href="#" class="has-text-primary">Odeslat znovu</a>
+                </p>
+            </footer>
+        </div>
+    </div>
+</div>
+{% endblock %}
