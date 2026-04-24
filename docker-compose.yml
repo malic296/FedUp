@@ -11,7 +11,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U krowten -d rss"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -28,6 +28,9 @@ services:
       retries: 10
 
   api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
     image: malic466/news-api
     restart: unless-stopped
     env_file:
@@ -41,6 +44,9 @@ services:
       - "8000"
 
   web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
     image: malic466/news-web
     restart: unless-stopped
     env_file:

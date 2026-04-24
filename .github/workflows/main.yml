@@ -1,0 +1,71 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-test-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create CI environment file
+        run: |
+          cat <<EOF > .env
+          DB_SERVER=${{ secrets.DB_SERVER }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_ADDRESS=db
+          DB_PORT=5432
+          DB_NAME=${{ secrets.DB_NAME }}
+          PEPPER=${{ secrets.PEPPER }}
+          VALKEY_HOST=redis
+          VALKEY_PORT=6379
+          VALKEY_DB=${{ secrets.VALKEY_DB }}
+          RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          API_URL=${{ secrets.API_URL }}
+          FE_ENV=prod
+          EOF
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build application images
+        run: docker compose build api web
+
+      - name: Start database and cache
+        run: docker compose up -d db redis
+
+      - name: Run database migrations
+        run: docker compose run --rm migrate
+
+      - name: Run API tests
+        run: docker compose run --rm api pytest tests/
+
+      - name: Push application images
+        run: docker compose push api web
+
+  deploy:
+    needs: build-test-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd ~/NewsAggregator
+            git pull origin main
+            docker-compose pull api web
+            docker-compose up -d db redis
+            docker-compose run --rm migrate
+            docker-compose up -d api web nginx scheduler --remove-orphans
