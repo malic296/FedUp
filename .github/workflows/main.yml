@@ -63,9 +63,10 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           script: |
+            set -e
             cd ~/NewsAggregator
             git pull origin main
-            docker compose pull api web
+            docker compose pull api web scheduler
             docker compose up -d db redis
             docker compose run --rm migrate
             docker compose up -d --remove-orphans api web nginx scheduler
