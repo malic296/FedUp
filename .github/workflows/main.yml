@@ -65,7 +65,7 @@ jobs:
           script: |
             cd ~/NewsAggregator
             git pull origin main
-            docker-compose pull api web
-            docker-compose up -d db redis
-            docker-compose run --rm migrate
-            docker-compose up -d --remove-orphans api web nginx scheduler
+            docker compose pull api web
+            docker compose up -d db redis
+            docker compose run --rm migrate
+            docker compose up -d --remove-orphans api web nginx scheduler
