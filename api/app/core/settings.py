@@ -32,4 +32,4 @@ class Settings(BaseSettings):
 
     config: Config = Field(default_factory=load_yaml_config)
 
-    model_config = SettingsConfigDict(env_file=".env.example", extra="ignore")
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
