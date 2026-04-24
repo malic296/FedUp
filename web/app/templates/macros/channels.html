@@ -9,6 +9,12 @@
                 </tr>
             </thead>
             <tbody>
+                {% if not channels %}
+                    <div class="notification is-outlined has-text-centered mt-5">
+                        <p>Žádné kanály k dispozici.</p>
+                    </div>
+                {% endif %}
+
                 {% for channel in channels %}
                 <tr>
                     <td class="is-vcentered has-text-weight-semibold">
