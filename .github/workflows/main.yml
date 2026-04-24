@@ -68,4 +68,4 @@ jobs:
             docker-compose pull api web
             docker-compose up -d db redis
             docker-compose run --rm migrate
-            docker-compose up -d api web nginx scheduler --remove-orphans
+            docker-compose up -d --remove-orphans api web nginx scheduler
