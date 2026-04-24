@@ -32,9 +32,7 @@ async def manage_request(request: Request, call_next):
     response = await call_next(request)
 
     try:
-        body = await request.body()
-        logger.info(f"DEBUG: Request: {request.method} {request.url.path} | Headers: {request.headers} | Body: {body.decode('utf-8')}")
-        logger.info(f"USER: {log_identity} | {request.method} {request.url.path} | Status: {response}")
+        logger.info(f"USER: {log_identity} | {request.method} {request.url.path} | Status: {response.status_code}")
     except Exception as e:
         print(f"[ CRITICAL] Logging failed because: {e}")
 
