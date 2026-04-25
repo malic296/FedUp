@@ -55,8 +55,8 @@ class ChannelRepository(BaseRepository, ChannelInterface):
         for channel in channels:
             channel_sql = """
                 INSERT INTO channel (title, link, uuid, logo_url)
-                VALUES (%s, %s, %s, %s, %s) 
-                ON CONFLICT link 
+                VALUES (%s, %s, %s, %s) 
+                ON CONFLICT (link)
                 DO UPDATE 
                 SET title = EXCLUDED.title 
                 RETURNING id; 
