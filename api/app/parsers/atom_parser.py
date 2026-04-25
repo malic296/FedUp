@@ -21,19 +21,16 @@ class AtomParser(FeedParser):
         channel_title = root.findtext(f"{self.namespace}title", None)
         link_elem = root.find(f"{self.namespace}link[@rel='alternate']")
         channel_link = link_elem.attrib.get("href", "") if link_elem is not None else None
-        image_element = root.find(f"{self.namespace}image")
-        logo_elem = image_element.find(f"{self.namespace}url") if image_element is not None else None
-        channel_logo = logo_elem.text if logo_elem is not None else None
 
-        if not channel_link or not channel_title or not channel_logo:
-            logger.info(f"Atom parser failed to parse the RSS feed because (title, link, logo): {channel_title}, {channel_link}, {channel_logo}")
+        if not channel_link or not channel_title:
+            logger.info(f"Atom parser failed to parse the RSS feed because (title, link): {channel_title}, {channel_link}")
             return None
 
         result = ScrapedChannel(
             title=channel_title.strip(),
             link=channel_link.strip(),
             uuid=str(uuid.uuid4()),
-            logo_url=channel_logo,
+            logo_url=f"https://s2.googleusercontent.com/s2/favicons?domain={channel_link}",
             articles=[]
         )
 

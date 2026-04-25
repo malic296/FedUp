@@ -8,5 +8,4 @@ class Channel:
     link: str
     logo_url: str
     disabled_by_user: bool = False
-    feed_url: Optional[str] = None
     id: Optional[int] = None

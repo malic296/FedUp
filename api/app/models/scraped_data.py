@@ -6,7 +6,6 @@ from .channel import Channel
 class ScrapedChannel:
     title: str
     link: str
-    feed_url: str
     uuid: str
     logo_url: str
     articles: list[Article]
