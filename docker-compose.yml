@@ -27,11 +27,11 @@ services:
       timeout: 3s
       retries: 10
 
-  api:
+  be:
     build:
       context: .
-      dockerfile: api/Dockerfile
-    image: malic466/news-api
+      dockerfile: be/Dockerfile
+    image: malic466/news-be
     restart: unless-stopped
     labels:
       ofelia.enabled: "true"
@@ -47,16 +47,16 @@ services:
     expose:
       - "8000"
 
-  web:
+  fe:
     build:
       context: .
-      dockerfile: web/Dockerfile
-    image: malic466/news-web
+      dockerfile: fe/Dockerfile
+    image: malic466/news-fe
     restart: unless-stopped
     env_file:
       - .env
     depends_on:
-      - api
+      - be
     expose:
       - "5000"
 
@@ -71,8 +71,8 @@ services:
       - ./certbot/www:/var/www/certbot:ro
       - ./certbot/conf:/etc/letsencrypt:ro
     depends_on:
-      - api
-      - web
+      - be
+      - fe
 
   certbot:
     image: certbot/certbot
@@ -81,7 +81,7 @@ services:
       - ./certbot/conf:/etc/letsencrypt
 
   migrate:
-    image: malic466/news-api
+    image: malic466/news-be
     env_file:
       - .env
     depends_on:
@@ -93,7 +93,7 @@ services:
     image: mcuadros/ofelia:latest
     restart: unless-stopped
     depends_on:
-      - api
+      - be
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command: daemon --docker
