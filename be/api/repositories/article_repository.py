@@ -69,7 +69,7 @@ class ArticleRepository(BaseRepository, ArticleInterface):
             next_cursor = None
             if has_more:
                 last = articles[-1]
-                sort_val = last.likes if order_by_likes else last.pub_date
+                sort_val = last.likes if order_by_likes else last.pub_date.replace(tzinfo=None)
                 next_cursor = encode_cursor(sort_value=sort_val, uuid=last.uuid)
 
             return PagedArticles(

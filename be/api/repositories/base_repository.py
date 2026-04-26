@@ -7,7 +7,7 @@ from api.core.errors import DatabaseError
 class BaseRepository:
     def __init__(self, connection_pool: ConnectionPool):
         self._pool = connection_pool
-        self.PAGE_SIZE = 20
+        self.PAGE_SIZE = 10
 
     def _execute(self, query: str, params: Optional[tuple] = None) -> DBResult:
         try:

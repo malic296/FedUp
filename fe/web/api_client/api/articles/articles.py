@@ -5,19 +5,38 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.articles_response import ArticlesResponse
 from ...models.http_validation_error import HTTPValidationError
+from ...models.paged_articles_dto import PagedArticlesDTO
 from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
     hours: int | Unset = 1,
+    order_by_likes: bool | Unset = True,
+    cursor: None | str | Unset = UNSET,
+    query: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
 
     params["hours"] = hours
+
+    params["order_by_likes"] = order_by_likes
+
+    json_cursor: None | str | Unset
+    if isinstance(cursor, Unset):
+        json_cursor = UNSET
+    else:
+        json_cursor = cursor
+    params["cursor"] = json_cursor
+
+    json_query: None | str | Unset
+    if isinstance(query, Unset):
+        json_query = UNSET
+    else:
+        json_query = query
+    params["query"] = json_query
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -32,9 +51,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ArticlesResponse | HTTPValidationError | None:
+) -> HTTPValidationError | PagedArticlesDTO | None:
     if response.status_code == 200:
-        response_200 = ArticlesResponse.from_dict(response.json())
+        response_200 = PagedArticlesDTO.from_dict(response.json())
 
         return response_200
 
@@ -51,7 +70,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ArticlesResponse | HTTPValidationError]:
+) -> Response[HTTPValidationError | PagedArticlesDTO]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -64,22 +83,31 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     hours: int | Unset = 1,
-) -> Response[ArticlesResponse | HTTPValidationError]:
+    order_by_likes: bool | Unset = True,
+    cursor: None | str | Unset = UNSET,
+    query: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | PagedArticlesDTO]:
     """Articles
 
     Args:
         hours (int | Unset):  Default: 1.
+        order_by_likes (bool | Unset):  Default: True.
+        cursor (None | str | Unset):
+        query (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ArticlesResponse | HTTPValidationError]
+        Response[HTTPValidationError | PagedArticlesDTO]
     """
 
     kwargs = _get_kwargs(
         hours=hours,
+        order_by_likes=order_by_likes,
+        cursor=cursor,
+        query=query,
     )
 
     response = client.get_httpx_client().request(
@@ -93,23 +121,32 @@ def sync(
     *,
     client: AuthenticatedClient,
     hours: int | Unset = 1,
-) -> ArticlesResponse | HTTPValidationError | None:
+    order_by_likes: bool | Unset = True,
+    cursor: None | str | Unset = UNSET,
+    query: None | str | Unset = UNSET,
+) -> HTTPValidationError | PagedArticlesDTO | None:
     """Articles
 
     Args:
         hours (int | Unset):  Default: 1.
+        order_by_likes (bool | Unset):  Default: True.
+        cursor (None | str | Unset):
+        query (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ArticlesResponse | HTTPValidationError
+        HTTPValidationError | PagedArticlesDTO
     """
 
     return sync_detailed(
         client=client,
         hours=hours,
+        order_by_likes=order_by_likes,
+        cursor=cursor,
+        query=query,
     ).parsed
 
 
@@ -117,22 +154,31 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     hours: int | Unset = 1,
-) -> Response[ArticlesResponse | HTTPValidationError]:
+    order_by_likes: bool | Unset = True,
+    cursor: None | str | Unset = UNSET,
+    query: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | PagedArticlesDTO]:
     """Articles
 
     Args:
         hours (int | Unset):  Default: 1.
+        order_by_likes (bool | Unset):  Default: True.
+        cursor (None | str | Unset):
+        query (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[ArticlesResponse | HTTPValidationError]
+        Response[HTTPValidationError | PagedArticlesDTO]
     """
 
     kwargs = _get_kwargs(
         hours=hours,
+        order_by_likes=order_by_likes,
+        cursor=cursor,
+        query=query,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -144,23 +190,32 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     hours: int | Unset = 1,
-) -> ArticlesResponse | HTTPValidationError | None:
+    order_by_likes: bool | Unset = True,
+    cursor: None | str | Unset = UNSET,
+    query: None | str | Unset = UNSET,
+) -> HTTPValidationError | PagedArticlesDTO | None:
     """Articles
 
     Args:
         hours (int | Unset):  Default: 1.
+        order_by_likes (bool | Unset):  Default: True.
+        cursor (None | str | Unset):
+        query (None | str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        ArticlesResponse | HTTPValidationError
+        HTTPValidationError | PagedArticlesDTO
     """
 
     return (
         await asyncio_detailed(
             client=client,
             hours=hours,
+            order_by_likes=order_by_likes,
+            cursor=cursor,
+            query=query,
         )
     ).parsed

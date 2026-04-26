@@ -1,3 +1,5 @@
+import json
+
 from flask import render_template, request, redirect, url_for
 from web.decorators import authorized
 from web.dependencies.services import get_services
@@ -9,24 +11,84 @@ from .forms import FilterForm, ChannelFilterForm
 def articles():
     services = get_services()
     filter_form = FilterForm()
+
     hours = 1
+    order_by_likes = True
+    query = None
+    cursor = request.args.get("cursor", None)
+    cursor = None if cursor == "None" else cursor
+    history_raw = request.args.get("history", "[]")
+
+    try:
+        cursor_history = json.loads(history_raw)
+        if not isinstance(cursor_history, list) or not all(isinstance(item, str) for item in cursor_history):
+            cursor_history = []
+    except (TypeError, json.JSONDecodeError):
+        cursor_history = []
 
     if filter_form.validate_on_submit():
         try:
             hours = int(filter_form.hours.data)
         except Exception:
             hours = 1
-        if not hours or int(hours) < 1:
-            filter_form.hours.errors.append("Hours must be set to 1 or greater.")
-            articles = services.articles.read_articles()
-
-        else:
-            articles = services.articles.read_articles(hours=int(hours))
+        order_by_likes = filter_form.order_by_likes.data == "true"
+        query = filter_form.query.data or None
     else:
-        articles = services.articles.read_articles(hours=hours)
+        try:
+            hours = int(request.args.get("hours", 1))
+        except Exception:
+            hours = 1
+        order_by_likes = request.args.get("order_by_likes", "true") == "true"
+        query = request.args.get("query", None)
 
-    articles.sort(key=lambda x: x.likes, reverse=True)
-    return render_template("main/articles.html", articles=articles, filter_form=filter_form, current_hours = hours)
+    result = services.articles.read_articles(
+        hours=hours,
+        order_by_likes=order_by_likes,
+        query=query,
+        cursor=cursor
+    )
+
+    has_previous = cursor is not None
+    prev_page_cursor = cursor_history[-1] if cursor_history else None
+    prev_history = cursor_history[:-1] if cursor_history else []
+    next_history = cursor_history + ([cursor] if cursor is not None else [])
+    base_params = {
+        "hours": hours,
+        "order_by_likes": str(order_by_likes).lower(),
+        "query": query,
+    }
+    prev_page_url = None
+    if has_previous:
+        prev_page_url = url_for(
+            "main.articles",
+            cursor=prev_page_cursor,
+            history=json.dumps(prev_history),
+            **base_params,
+        )
+    next_page_url = None
+    if result.has_more and result.next_cursor is not None:
+        next_page_url = url_for(
+            "main.articles",
+            cursor=result.next_cursor,
+            history=json.dumps(next_history),
+            **base_params,
+        )
+
+    return render_template(
+        "main/articles.html",
+        articles=result.articles if result.articles else [],
+        filter_form=filter_form,
+        current_hours = hours,
+        has_more = result.has_more,
+        next_cursor = result.next_cursor,
+        current_cursor = cursor,
+        has_previous = has_previous,
+        prev_cursor = prev_page_cursor,
+        prev_page_url = prev_page_url,
+        next_page_url = next_page_url,
+        current_order_by_likes=str(order_by_likes).lower(),
+        current_query=query
+    )
 
 
 @main.route("/article/<uuid>", methods = ["GET", "POST"])

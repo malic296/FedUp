@@ -39,23 +39,4 @@ document.addEventListener('DOMContentLoaded', () => {
             btnText.innerText = description.classList.contains('is-hidden') ? 'Zobrazit popis' : 'Skrýt popis';
         });
     });
-
-    const sortSelector = document.getElementById('sort-selector');
-    if (sortSelector) {
-        sortSelector.addEventListener('change', function() {
-            const stream = document.querySelector('.article-stream');
-            const articles = Array.from(stream.querySelectorAll('.article-item'));
-            const sortBy = this.value;
-
-            articles.sort((a, b) => {
-                if (sortBy === 'likes') {
-                    return parseInt(b.dataset.likes) - parseInt(a.dataset.likes);
-                } else {
-                    return parseFloat(b.dataset.timestamp) - parseFloat(a.dataset.timestamp);
-                }
-            });
-
-            articles.forEach(article => stream.appendChild(article));
-        });
-    }
 });

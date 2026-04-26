@@ -1,11 +1,9 @@
 {% extends "layouts/main.html" %}
 {% block title %} Stream zpráv {% endblock %}
 {% from "macros/articles.html" import render_articles %}
-
 {% block content %}
 <section class="section">
     <div class="container is-max-desktop">
-
         <div class="level is-mobile mb-6 pb-5" style="border-bottom: 1px solid #333;">
             <div class="level-left">
                 <div class="level-item">
@@ -18,50 +16,104 @@
                     </div>
                 </div>
             </div>
-
             <div class="level-right">
-                <div class="level-item">
-                    <div class="field">
-                        <label class="control-label">Seřadit podle</label>
-                        <div class="control has-icons-left">
-                            <div class="select is-small is-rounded">
-                                <select id="sort-selector">
-                                    <option value="likes">Počet Liků</option>
-                                    <option value="timestamp">Nejnovější</option>
-                                </select>
-                            </div>
-                            <div class="icon is-small is-left has-text-primary">
-                                <i class="fas fa-sort"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <form method="POST" action="{{ url_for('main.articles') }}">
+                    {{ filter_form.hidden_tag() }}
+                    <div class="field is-grouped is-grouped-multiline">
 
-                <div class="level-item">
-                    <form method="POST" action="{{ url_for('main.articles') }}">
-                        {{ filter_form.hidden_tag() }}
-                        <div class="field">
-                            <label class="control-label">Historie (hod)</label>
+                        <div class="control">
+                            <label class="label is-small">Historie (hod)</label>
                             <div class="field has-addons">
-                                <div class="control has-icons-left" style="width: 80px;">
-                                    {{ filter_form.hours(class="input is-small is-rounded", placeholder="Hodiny") }}
+                                <div class="control has-icons-left">
+                                    {{ filter_form.hours(class="input is-small is-rounded", placeholder="Hod.", style="width:70px") }}
                                     <span class="icon is-small is-left">
-                                        <i class="fas fa-filter"></i>
+                                        <i class="fas fa-clock"></i>
                                     </span>
                                 </div>
-                                <div class="control">
-                                    <button type="submit" class="button is-small is-primary is-rounded is-outlined has-text-weight-bold">
-                                        OK
-                                    </button>
+                            </div>
+                        </div>
+
+                        <div class="control">
+                            <label class="label is-small">Seřadit</label>
+                            <div class="field">
+                                <div class="control has-icons-left">
+                                    <div class="select is-small is-rounded">
+                                        {{ filter_form.order_by_likes() }}
+                                    </div>
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-sort"></i>
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                    </form>
-                </div>
+
+                        <div class="control">
+                            <label class="label is-small">Hledat</label>
+                            <div class="field">
+                                <div class="control has-icons-left">
+                                    {{ filter_form.query(class="input is-small is-rounded", placeholder="Hledat...") }}
+                                    <span class="icon is-small is-left">
+                                        <i class="fas fa-search"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="control" style="align-self: flex-end;">
+                            <button type="submit" class="button is-small is-primary is-rounded is-outlined has-text-weight-bold">
+                                <span class="icon is-small"><i class="fas fa-check"></i></span>
+                                <span>OK</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </form>
             </div>
         </div>
 
         {{ render_articles(articles) }}
+
+        <div class="level mt-6 pt-5" style="border-top: 1px solid #333;">
+            <div class="level-left">
+                <div class="level-item">
+                    {% if has_previous and prev_page_url %}
+                        <a href="{{ prev_page_url }}" class="button is-small is-rounded is-primary is-outlined">
+                            <span class="icon is-small">
+                                <i class="fas fa-arrow-left"></i>
+                            </span>
+                            <span>Předchozí</span>
+                        </a>
+                    {% else %}
+                        <button class="button is-small is-rounded is-primary is-outlined" disabled>
+                            <span class="icon is-small">
+                                <i class="fas fa-arrow-left"></i>
+                            </span>
+                            <span>Předchozí</span>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="level-right">
+                <div class="level-item">
+                    {% if next_page_url %}
+                        <a href="{{ next_page_url }}"
+                           class="button is-small is-rounded is-primary is-outlined">
+                            <span>Další</span>
+                            <span class="icon is-small">
+                                <i class="fas fa-arrow-right"></i>
+                            </span>
+                        </a>
+                    {% else %}
+                        <button class="button is-small is-rounded is-outlined" disabled>
+                            <span>Další</span>
+                            <span class="icon is-small">
+                                <i class="fas fa-arrow-right"></i>
+                            </span>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
     </div>
 </section>
