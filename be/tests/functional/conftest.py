@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from api.core.container import ServiceContainer
 from api.models import Article, Channel, Consumer, PagedArticles
 from api.services import SecurityService
-from run import app
+from run import api
 
 
 @pytest.fixture
@@ -55,14 +55,14 @@ def functional_services(mocker, consumer: Consumer):
     container.consumer_service.authenticate.return_value = security_service.create_access_token(consumer)
     container.consumer_service.verify_registration.return_value = security_service.create_access_token(consumer)
 
-    app.dependency_overrides.clear()
-    app.state.services = container
+    api.dependency_overrides.clear()
+    api.state.services = container
     return container
 
 
 @pytest.fixture
 def client(functional_services):
-    return TestClient(app, raise_server_exceptions=False, base_url="http://localhost")
+    return TestClient(api, raise_server_exceptions=False, base_url="http://localhost")
 
 
 @pytest.fixture
