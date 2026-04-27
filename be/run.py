@@ -77,10 +77,10 @@ app = FastAPI(debug=(settings.config.environment == "dev"), generate_unique_id_f
 
 # MIDDLEWARES
 #api.add_middleware(HTTPSRedirectMiddleware)
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "be", "nginx"])
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "be", "be:8000", "nginx"])
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"] if settings.config.environment == "dev" else ["https://production.com", "localhost"],
+    allow_origins=["*"] if settings.config.environment == "dev" else ["https://fedup.live", "localhost"],
     allow_methods=["GET", "POST"]
 )
 
