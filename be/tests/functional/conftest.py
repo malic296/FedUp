@@ -4,7 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from api.core.container import ServiceContainer
-from api.models import Article, Channel, Consumer
+from api.models import Article, Channel, Consumer, PagedArticles
 from api.services import SecurityService
 from run import app
 
@@ -47,7 +47,7 @@ def functional_services(mocker, consumer: Consumer):
         security_service=security_service,
     )
     container.cache_service.can_request_go_through.return_value = True
-    container.article_service.get_articles.return_value = [article]
+    container.article_service.get_articles.return_value = PagedArticles(articles=[article], has_more=False, next_cursor=None)
     container.article_service.get_article.return_value = article
     container.article_service.like_article.return_value = True
     container.channel_service.get_channels.return_value = [channel]

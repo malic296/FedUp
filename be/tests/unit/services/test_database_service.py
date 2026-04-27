@@ -9,27 +9,32 @@ from api.core.errors import (
     RegistrationExpiredError,
     UsernameAlreadyUsedError,
 )
+from api.models import PagedArticles
 from api.services import ArticleService, ChannelService, ConsumerService
 
 
 def test_article_service_reads_from_repository(mocker, consumer, article):
     articles_repo = mocker.Mock()
     cache = mocker.Mock()
-    service = ArticleService(articles=articles_repo, cache=cache)
-    articles_repo.get_articles.return_value = [article]
+    es_client = mocker.Mock()
+    service = ArticleService(articles=articles_repo, cache=cache, es_client=es_client)
+    articles_repo.get_articles.return_value = PagedArticles(articles=[article], has_more=False)
 
-    result = service.get_articles(consumer=consumer, hours=2)
+    result = service.get_articles(consumer=consumer, hours=2, order_by_likes=False, cursor=None)
 
-    assert result == [article]
-    articles_repo.get_articles.assert_called_once_with(consumer=consumer, hours=2)
+    assert result.articles == [article]
+    assert len(result.articles) == 1
+    assert result.has_more is False
+    articles_repo.get_articles.assert_called_once_with(consumer=consumer, hours=2, order_by_likes=False, sort_value=None, uuid=None)
 
 
 def test_article_service_caches_fetched_article(mocker, article):
     articles_repo = mocker.Mock()
     cache = mocker.Mock()
+    es_client = mocker.Mock()
     cache.get_article.return_value = None
     articles_repo.get_article.return_value = article
-    service = ArticleService(articles=articles_repo, cache=cache)
+    service = ArticleService(articles=articles_repo, cache=cache, es_client=es_client)
 
     result = service.get_article("article-uuid")
 
@@ -39,8 +44,9 @@ def test_article_service_caches_fetched_article(mocker, article):
 
 def test_article_service_like_raises_for_missing_article(mocker, consumer):
     articles_repo = mocker.Mock()
+    es_client = mocker.Mock()
     articles_repo.article_uuid_to_id.return_value = None
-    service = ArticleService(articles=articles_repo, cache=mocker.Mock())
+    service = ArticleService(articles=articles_repo, cache=mocker.Mock(), es_client=es_client)
 
     with pytest.raises(ArticleNotFoundError):
         service.like_article("missing-uuid", consumer)

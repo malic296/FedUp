@@ -1,11 +1,12 @@
 from datetime import datetime, timezone
 
-from api.models import Article
+from api.models import Article, PagedArticles
 
 
 def test_get_articles(test_client, mock_services, consumer):
-    mock_services.article_service.get_articles.return_value = [
-        Article(
+    mock_services.article_service.get_articles.return_value = PagedArticles(
+        articles=[
+            Article(
             id=1,
             uuid="article-uuid",
             title="TITLE_1",
@@ -16,16 +17,16 @@ def test_get_articles(test_client, mock_services, consumer):
             likes=1,
             liked_by_user=False,
             channel_logo="https://example.com/logo.png"
-        )
-    ]
+        )],
+        has_more=False,
+        next_cursor=None
+    )
 
     response = test_client.get("/v1/articles/", params={"hours": 2})
     json_data = response.json()
 
-    mock_services.article_service.get_articles.assert_called_once_with(consumer=consumer, hours=2)
+    mock_services.article_service.get_articles.assert_called_once_with(consumer=consumer, hours=2, order_by_likes=True, cursor=None, query=None)
     assert response.status_code == 200
-    assert json_data["message"] == "Articles fetched correctly"
-    assert json_data["success"] is True
     assert len(json_data["articles"]) == 1
     assert json_data["articles"][0]["uuid"] == "article-uuid"
 

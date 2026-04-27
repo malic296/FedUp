@@ -7,17 +7,17 @@ from api.models import DBResult
 def test_get_articles_success(mocker, article_repository, db_result_article, consumer):
     mocker.patch.object(article_repository, "_execute", return_value=db_result_article)
 
-    articles = article_repository.get_articles(consumer=consumer, hours=3)
+    result = article_repository.get_articles(consumer=consumer, hours=3, order_by_likes=True, sort_value=None, uuid=None)
 
-    assert len(articles) == 1
-    assert articles[0].uuid == db_result_article.data[0]["uuid"]
+    assert len(result.articles) == 1
+    assert result.articles[0].uuid == db_result_article.data[0]["uuid"]
 
 
 def test_get_articles_failure(mocker, article_repository, consumer):
     mocker.patch.object(article_repository, "_execute", return_value=DBResult(success=False, error_message="db failed"))
 
     with pytest.raises(DatabaseError) as exc:
-        article_repository.get_articles(consumer=consumer, hours=3)
+        article_repository.get_articles(consumer=consumer, hours=3, order_by_likes=True, sort_value=None, uuid=None)
 
     assert exc.value.internal_message == "Query execution failed for method: get_articles. Error message: db failed"
 

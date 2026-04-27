@@ -1,13 +1,10 @@
 from datetime import datetime, timezone
 import logging
-
 import pytest
-
 from api.models import Article, Channel, Consumer, DBResult
 from api.repositories import ArticleRepository, ChannelRepository, ConsumerRepository, LoggingRepository
 from api.schemas import RegistrationDTO, UpdateCredentialsDTO
 from api.services import CacheService, EmailService, SecurityService
-
 
 @pytest.fixture
 def consumer() -> Consumer:
@@ -70,14 +67,13 @@ def security_service() -> SecurityService:
 def mocked_redis(mocker):
     redis_instance = mocker.Mock()
     redis_instance.ping.return_value = True
-    mocker.patch("api.services.cache_service.Redis", return_value=redis_instance)
+    mocker.patch("api.core.database.create_valkey_client", return_value=redis_instance)
     return redis_instance
 
 
 @pytest.fixture
 def cache_service(mocked_redis) -> CacheService:
-    return CacheService(host="localhost", port=6379, db=0)
-
+    return CacheService(client=mocked_redis)
 
 @pytest.fixture
 def article_repository(mocker):
