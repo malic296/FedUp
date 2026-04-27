@@ -1,11 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
-
 from api.api.dependencies import get_current_user, get_services
 from api.core.container import ServiceContainer
 from api.models import Consumer
-from run import api
-
+from run import app
 
 @pytest.fixture
 def consumer() -> Consumer:
@@ -29,20 +27,20 @@ def mock_services(mocker):
 
 @pytest.fixture
 def test_client(consumer: Consumer, mock_services):
-    api.dependency_overrides.clear()
-    api.state.services = mock_services
-    api.dependency_overrides[get_services] = lambda: mock_services
-    api.dependency_overrides[get_current_user] = lambda: consumer
-    client = TestClient(api, raise_server_exceptions=False, base_url="http://localhost")
+    app.dependency_overrides.clear()
+    app.state.services = mock_services
+    app.dependency_overrides[get_services] = lambda: mock_services
+    app.dependency_overrides[get_current_user] = lambda: consumer
+    client = TestClient(app, raise_server_exceptions=False, base_url="http://localhost")
     yield client
-    api.dependency_overrides.clear()
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
 def unauthenticated_client(mock_services):
-    api.dependency_overrides.clear()
-    api.state.services = mock_services
-    api.dependency_overrides[get_services] = lambda: mock_services
-    client = TestClient(api, raise_server_exceptions=False, base_url="http://localhost")
+    app.dependency_overrides.clear()
+    app.state.services = mock_services
+    app.dependency_overrides[get_services] = lambda: mock_services
+    client = TestClient(app, raise_server_exceptions=False, base_url="http://localhost")
     yield client
-    api.dependency_overrides.clear()
+    app.dependency_overrides.clear()
