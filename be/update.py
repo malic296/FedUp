@@ -2,7 +2,7 @@ from httpx import AsyncClient
 import asyncio
 from api.core.errors import AppError
 from api.core.settings import Settings
-from api.core.database import create_connection_pool
+from api.core.database import create_connection_pool, create_valkey_client
 from api.services.channel_service import ChannelService
 from api.services.scraping_service import ScrapingService
 from api.services import CacheService
@@ -29,11 +29,7 @@ async def main() -> None:
             scraping_service = ScrapingService(client)
             channel_service = ChannelService(
                 channels=ChannelRepository(connection_pool=db_pool),
-                cache=CacheService(
-                    settings.valkey_host,
-                    settings.valkey_port,
-                    settings.valkey_db
-                ),
+                cache=CacheService(create_valkey_client(settings)),
                 scraping_service=scraping_service
             )
             logger.info("Dependencies loaded.")
