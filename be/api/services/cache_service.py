@@ -1,33 +1,16 @@
 from typing import Optional
 from api.models import Channel, Article
-from api.core.errors import DependencyUnavailableError, MappingError
+from api.core.errors import MappingError
 from api.schemas import RegistrationDTO
 from redis import Redis
-from redis.exceptions import RedisError
 import json
 from dataclasses import asdict
-from redis.retry import Retry
-from redis.backoff import NoBackoff
 
 class CacheService:
-    def __init__(self, host: str, port: int, db: int):
+    def __init__(self, client: Redis):
         self._reg_key_prefix = "reg:"
         self._data_key_prefix = "data:"
-
-        try:
-            self._client = Redis(
-                host=host,
-                port=port,
-                db=db,
-                decode_responses=True,
-                retry=Retry(NoBackoff(), 0),
-                socket_connect_timeout=2.0
-            )
-
-            self._client.ping()
-
-        except RedisError as e:
-            raise DependencyUnavailableError(dependency="VALKEY")
+        self._client = client
 
     def is_registration_pending(self, registration: RegistrationDTO) -> bool:
         email_key = self._reg_key_prefix + registration.email

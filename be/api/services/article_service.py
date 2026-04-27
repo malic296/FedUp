@@ -4,17 +4,23 @@ from api.core.errors import ArticleNotFoundError
 from api.core.cursor import decode_cursor
 from .cache_service import CacheService
 from api.models import PagedArticles
+from elasticsearch import Elasticsearch
 
 class ArticleService:
-    def __init__(self, articles: ArticleInterface, cache: CacheService):
+    def __init__(self, articles: ArticleInterface, cache: CacheService, es_client: Elasticsearch):
         self.articles = articles
         self.cache = cache
+        self.es_client = es_client
 
-    def get_articles(self, consumer: Consumer, hours: int, order_by_likes: bool, cursor: str | None) -> PagedArticles:
+    def get_articles(self, consumer: Consumer, hours: int, order_by_likes: bool, cursor: str | None, query = str | None) -> PagedArticles:
         if hours > 72 or hours < 1:
             raise Exception("Hours must be <= 1 and 72 <=")
 
         sort_value, uuid = decode_cursor(cursor) if cursor else (None, None)
+
+        if query:
+            #TODO: ELASTIC SEARCH LOGIC
+            print(query)
 
         return self.articles.get_articles(
             consumer=consumer,

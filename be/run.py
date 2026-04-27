@@ -1,4 +1,6 @@
 from contextlib import asynccontextmanager
+
+from elasticsearch import Elasticsearch
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
@@ -11,7 +13,7 @@ from api.services import CacheService, SecurityService, EmailService, ArticleSer
 from api.core.settings import Settings
 from api.core.middlewares import manage_request
 from api.handlers.exception_handlers import internal_exception_handler, http_exception_handler, unexpected_exception_handler
-from api.core.database import create_connection_pool
+from api.core.database import create_connection_pool, create_elastic_search_client, create_valkey_client
 from api.core.logger.handlers import DatabaseHandler, DropOnFailHandler
 import logging
 from api.core.errors import AppError
@@ -22,20 +24,24 @@ settings = Settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # REPOSITORIES
+    # UTILS
     db_pool = create_connection_pool(settings)
+    valkey_client = create_valkey_client(settings)
+    elastic_search_client = create_elastic_search_client(settings)
+
+    # REPOSITORIES
     article_repository = ArticleRepository(connection_pool=db_pool)
     channel_repository = ChannelRepository(connection_pool=db_pool)
     consumer_repository = ConsumerRepository(connection_pool=db_pool)
     logging_repository = LoggingRepository(connection_pool=db_pool)
 
     # UTIL SERVICES
-    cache = CacheService(host=settings.valkey_host, port=settings.valkey_port, db=settings.valkey_db)
+    cache = CacheService(client=valkey_client)
     security = SecurityService(pepper=settings.pepper, jwt=settings.jwt_secret)
     email = EmailService(resend_key=settings.resend_key)
 
     # CORE SERVICES
-    article_service = ArticleService(articles=article_repository, cache=cache)
+    article_service = ArticleService(articles=article_repository, cache=cache, es_client=elastic_search_client)
     channel_service = ChannelService(channels=channel_repository, cache=cache, scraping_service=None)
     consumer_service = ConsumerService(
         consumers=consumer_repository,

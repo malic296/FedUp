@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     valkey_port: int = Field(alias="VALKEY_PORT")
     valkey_db: int = Field(alias="VALKEY_DB")
 
+    elastic_search_conn: str = Field(alias="ELASTIC_SEARCH_CONN")
+
     resend_key: str = Field(alias="RESEND_API_KEY")
     jwt_secret: str = Field(alias="JWT_SECRET")
     pepper: str = Field(alias="PEPPER")
