@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 async def manage_request(request: Request, call_next):
     services = request.app.state.services
     security_service = services.security_service
-    cache_service = services.cache_service
 
     ip_address = request.client.host if request.client else "Unknown"
     log_identity = ip_address
@@ -26,7 +25,7 @@ async def manage_request(request: Request, call_next):
         except Exception:
             pass
 
-    if not cache_service.can_request_go_through(rate_limit_key):
+    if not security_service.can_request_go_through(rate_limit_key):
         return create_error_response(RateLimitExceededError())
 
     response = await call_next(request)

@@ -4,14 +4,18 @@ from argon2 import PasswordHasher
 import jwt
 from jwt import PyJWTError
 from argon2.exceptions import VerificationError, VerifyMismatchError, InvalidHashError
+from api.interfaces import ValkeyInterface
 from api.models import Consumer
 
 class SecurityService:
-    def __init__(self, pepper: str, jwt: str):
+    def __init__(self, pepper: str, jwt: str, valkey: ValkeyInterface):
         self._hasher = PasswordHasher()
         self._pepper = pepper
         self._secret_key = jwt
         self._algorithm = "HS256"
+        self.valkey = valkey
+        self.limit = 10
+        self.expiration_seconds = 5
 
     def get_password_hash(self, password: str) -> str:
         password = password + self._pepper
@@ -44,4 +48,12 @@ class SecurityService:
             return jwt.decode(token, self._secret_key, algorithms=[self._algorithm])
         except PyJWTError:
             return None
+
+    def can_request_go_through(self, user_key: str) -> bool:
+        current_count = self.valkey.increment_counter(user_key)
+
+        if current_count == 1:
+            self.valkey.set_expiration(user_key, self.expiration_seconds)
+
+        return current_count <= self.limit
 

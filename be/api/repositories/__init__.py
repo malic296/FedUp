@@ -3,3 +3,4 @@ from .article_repository import ArticleRepository
 from .consumer_repository import ConsumerRepository
 from .logging_repository import LoggingRepository
 from .elastic_search_repository import ElasticSearchRepository
+from .valkey_repository import ValkeyRepository

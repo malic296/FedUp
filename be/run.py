@@ -1,6 +1,4 @@
 from contextlib import asynccontextmanager
-
-from elasticsearch import Elasticsearch
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
@@ -8,9 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.api.v1 import v1_router
 from api.api.dependencies import generate_unique_endpoint_id
 from api.core.container import ServiceContainer
-from api.repositories import ArticleRepository, ChannelRepository, ConsumerRepository, LoggingRepository, \
-    ElasticSearchRepository
-from api.services import CacheService, SecurityService, EmailService, ArticleService, ChannelService, ConsumerService
+from api.repositories import ArticleRepository, ChannelRepository, ConsumerRepository, LoggingRepository, ElasticSearchRepository, ValkeyRepository
+from api.services import SecurityService, EmailService, ArticleService, ChannelService, ConsumerService
 from api.core.settings import Settings
 from api.core.middlewares import manage_request
 from api.handlers.exception_handlers import internal_exception_handler, http_exception_handler, unexpected_exception_handler
@@ -36,18 +33,18 @@ async def lifespan(app: FastAPI):
     consumer_repository = ConsumerRepository(connection_pool=db_pool)
     logging_repository = LoggingRepository(connection_pool=db_pool)
     elastic_search_repository = ElasticSearchRepository(client=elastic_search_client)
+    valkey_repository = ValkeyRepository(client=valkey_client)
 
     # UTIL SERVICES
-    cache = CacheService(client=valkey_client)
-    security = SecurityService(pepper=settings.pepper, jwt=settings.jwt_secret)
+    security = SecurityService(pepper=settings.pepper, jwt=settings.jwt_secret, valkey=valkey_repository)
     email = EmailService(resend_key=settings.resend_key)
 
     # CORE SERVICES
-    article_service = ArticleService(articles=article_repository, cache=cache, elasticsearch=elastic_search_repository, channels=channel_repository)
-    channel_service = ChannelService(channels=channel_repository, cache=cache, scraping_service=None, elasticsearch=elastic_search_client)
+    article_service = ArticleService(articles=article_repository, valkey=valkey_repository, elasticsearch=elastic_search_repository, channels=channel_repository)
+    channel_service = ChannelService(channels=channel_repository, valkey=valkey_repository, scraping_service=None, elasticsearch=elastic_search_client)
     consumer_service = ConsumerService(
         consumers=consumer_repository,
-        cache=cache,
+        valkey=valkey_repository,
         security=security,
         email=email,
     )
@@ -64,7 +61,6 @@ async def lifespan(app: FastAPI):
         article_service=article_service,
         channel_service=channel_service,
         consumer_service=consumer_service,
-        cache_service=cache,
         email_service=email,
         security_service=security
     )

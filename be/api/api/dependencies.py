@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import Depends, Request
 from fastapi.routing import APIRoute
 from fastapi.security import OAuth2PasswordBearer
-from api.services import CacheService, ArticleService, ChannelService, ConsumerService, SecurityService, EmailService
+from api.services import ArticleService, ChannelService, ConsumerService, SecurityService, EmailService
 from api.models import Consumer
 from api.core.errors import AuthenticationRequiredError
 from api.core.container import ServiceContainer
@@ -24,9 +24,6 @@ def get_security_service(services: Annotated[ServiceContainer, Depends(get_servi
 
 def get_email_service(services: Annotated[ServiceContainer, Depends(get_services)]) -> EmailService:
     return services.email_service
-
-def get_cache_service(services: Annotated[ServiceContainer, Depends(get_services)]) -> CacheService:
-    return services.cache_service
 
 def generate_unique_endpoint_id(route: APIRoute):
     return route.name

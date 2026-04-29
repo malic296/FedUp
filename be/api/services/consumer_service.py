@@ -2,9 +2,8 @@ import secrets
 from typing import Optional
 from api.models import Consumer
 from api.schemas import RegistrationDTO, UpdateCredentialsDTO
-from api.interfaces import ConsumerInterface
+from api.interfaces import ConsumerInterface, ValkeyInterface
 from api.core.errors import RegistrationExpiredError, EmailAlreadyUsedError, UsernameAlreadyUsedError, InvalidCredentialsError, InvalidCurrentPasswordError, PasswordReuseError
-from .cache_service import CacheService
 from .email_service import EmailService
 from .security_service import SecurityService
 
@@ -12,12 +11,12 @@ class ConsumerService:
     def __init__(
         self,
         consumers: ConsumerInterface,
-        cache: CacheService,
+        valkey: ValkeyInterface,
         security: SecurityService,
         email: EmailService,
     ):
         self.consumers = consumers
-        self.cache = cache
+        self.valkey = valkey
         self.security = security
         self.email = email
 
@@ -45,11 +44,11 @@ class ConsumerService:
             raise UsernameAlreadyUsedError()
 
     def create_new_registration(self, registration: RegistrationDTO, code: int) -> None:
-        is_pending = self.cache.is_registration_pending(registration)
+        is_pending = self.valkey.is_registration_pending(registration)
         if is_pending:
-            self.cache.delete_registration_from_pending(registration)
+            self.valkey.delete_registration_from_pending(registration)
 
-        self.cache.create_pending_registration(registration, code)
+        self.valkey.create_pending_registration(registration, code)
 
     def request_registration(self, registration: RegistrationDTO) -> None:
         self.validate_new_registration(registration)
@@ -59,7 +58,7 @@ class ConsumerService:
         self.create_new_registration(registration, code)
 
     def register_consumer(self, email: str, code: int) -> Consumer:
-        registration = self.cache.provided_code_correct(email=email, code=code)
+        registration = self.valkey.provided_code_correct(email=email, code=code)
         if registration:
             return self.consumers.register_consumer(registration)
         else:

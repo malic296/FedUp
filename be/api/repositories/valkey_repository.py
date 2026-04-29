@@ -5,8 +5,9 @@ from api.schemas import RegistrationDTO
 from redis import Redis
 import json
 from dataclasses import asdict
+from api.interfaces import ValkeyInterface
 
-class CacheService:
+class ValkeyRepository(ValkeyInterface):
     def __init__(self, client: Redis):
         self._reg_key_prefix = "reg:"
         self._data_key_prefix = "data:"
@@ -67,7 +68,7 @@ class CacheService:
                 return [Channel(**channel) for channel in json_data]
             except Exception as e:
                 raise MappingError(mapping_error=str(e), method="get_available_channels")
-        
+
         return []
 
     def get_article(self, uuid: str) -> Optional[Article]:
@@ -93,12 +94,10 @@ class CacheService:
         except Exception as e:
             raise MappingError(mapping_error=str(e), method="set_article")
 
-    def can_request_go_through(self, user_key: str) -> bool:
-        requests = self._client.incr(user_key)
+    def increment_counter(self, key: str) -> int:
+        return self._client.incr(key)
 
-        if requests == 1:
-            self._client.expire(user_key, 5)
-
-        return requests <= 10
+    def set_expiration(self, key: str, seconds: int):
+        self._client.expire(key, seconds)
 
 

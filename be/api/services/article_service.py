@@ -3,16 +3,16 @@ from api.models import Consumer, Article, Channel
 from api.interfaces import ArticleInterface, ElasticSearchInterface, ChannelInterface
 from api.core.errors import ArticleNotFoundError
 from api.core.cursor import decode_cursor
-from .cache_service import CacheService
+from api.interfaces import ValkeyInterface
 from api.models import PagedArticles, Channel
 
 logger = logging.getLogger(__name__)
 
 class ArticleService:
-    def __init__(self, articles: ArticleInterface, cache: CacheService, elasticsearch: ElasticSearchInterface, channels = ChannelInterface):
+    def __init__(self, articles: ArticleInterface, valkey: ValkeyInterface, elasticsearch: ElasticSearchInterface, channels = ChannelInterface):
         self.articles = articles
         self.channels = channels
-        self.cache = cache
+        self.valkey = valkey
         self.elasticsearch = elasticsearch
 
     def get_articles(self, consumer: Consumer, hours: int, order_by_likes: bool, cursor: str | None, page: int = 1, query: str | None = None) -> PagedArticles:
@@ -48,11 +48,11 @@ class ArticleService:
         )
 
     def get_article(self, uuid: str) -> Article:
-        article = self.cache.get_article(uuid=uuid)
+        article = self.valkey.get_article(uuid=uuid)
         if not article:
             article = self.articles.get_article(uuid=uuid)
             if article:
-                self.cache.set_article(article=article)
+                self.valkey.set_article(article=article)
 
         if not article:
             raise ArticleNotFoundError()

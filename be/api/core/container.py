@@ -1,11 +1,10 @@
 from dataclasses import dataclass
-from api.services import ArticleService, ChannelService, ConsumerService, EmailService, SecurityService, CacheService
+from api.services import ArticleService, ChannelService, ConsumerService, EmailService, SecurityService
 
 @dataclass(frozen=True)
 class ServiceContainer:
     article_service: ArticleService
     channel_service: ChannelService
     consumer_service: ConsumerService
-    cache_service: CacheService
     email_service: EmailService
     security_service: SecurityService
