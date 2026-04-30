@@ -5,9 +5,8 @@ from api.core.settings import Settings
 from api.core.clients import create_connection_pool, create_valkey_client, create_elastic_search_client
 from api.services.channel_service import ChannelService
 from api.services.scraping_service import ScrapingService
-from api.services import CacheService
 from api.core.logger.handlers import DropOnFailHandler, DatabaseHandler
-from api.repositories import LoggingRepository, ChannelRepository, ElasticSearchRepository
+from api.repositories import LoggingRepository, ChannelRepository, ElasticSearchRepository, ValkeyRepository
 import logging
 from api.core.logger import setup_logging
 
@@ -29,7 +28,7 @@ async def main() -> None:
             scraping_service = ScrapingService(client)
             channel_service = ChannelService(
                 channels=ChannelRepository(connection_pool=db_pool),
-                cache=CacheService(create_valkey_client(settings)),
+                valkey=ValkeyRepository(create_valkey_client(settings)),
                 scraping_service=scraping_service,
                 elasticsearch=ElasticSearchRepository(es_client)
             )
