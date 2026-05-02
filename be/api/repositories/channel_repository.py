@@ -1,5 +1,5 @@
 import uuid
-from api.models import Channel, ScrapedChannel, ArticleSearchEntry
+from api.models import Channel, ScrapedChannel, ArticleSearchEntry, Article
 from api.core.errors import DatabaseError, MappingError
 from .base_repository import BaseRepository
 from api.interfaces import ChannelInterface
@@ -47,58 +47,49 @@ class ChannelRepository(BaseRepository, ChannelInterface):
                 method="set_disabled_channels_by_uuids"
             )
 
-    def update_channels(self, channels: list[ScrapedChannel]) -> list[ArticleSearchEntry]:
-        article_queries: list[tuple[str, tuple]] = []
+    def get_new_articles(self, channels: list[ScrapedChannel]) -> list[tuple[int, list[Article]]]:
+        channel_insert = """
+            INSERT INTO channel (uuid, title, link, logo_url) 
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (link) DO UPDATE SET title = EXCLUDED.title
+            RETURNING id, link
+        """
+        channel_queries = []
 
         for channel in channels:
-            channel_sql = """
-                INSERT INTO channel (title, link, uuid, logo_url)
-                VALUES (%s, %s, %s, %s) 
-                ON CONFLICT (link)
-                DO UPDATE 
-                SET title = EXCLUDED.title 
-                RETURNING id; 
-            """
-            channel_params = (channel.title, channel.link, str(uuid.uuid4()), channel.logo_url)
+            channel_queries.append((channel_insert, (channel.uuid, channel.title, channel.link, channel.logo_url, )))
 
-            channel_result = self._execute(channel_sql, channel_params)
+        ch_result = self._execute_transaction_returning(channel_queries)
 
-            if not channel_result.success:
-                raise DatabaseError(message= channel_result.error_message if channel_result.error_message else "Unknown error", method="update_channels")
+        if not ch_result.success:
+            raise DatabaseError(
+                message=ch_result.error_message if ch_result.error_message else "Unknown error",
+                method="update_channels"
+            )
 
-            if not channel_result.data:
-                raise DatabaseError(f"Failed to fetch ID for channel {channel.title}", method="update_channels")
+        channel_id_map = {row["link"]: row["id"] for row in ch_result.data}
 
-            channel_id = channel_result.data[0]["id"]
+        all_scraped_links = [art.link for ch in channels for art in ch.articles]
+        check_sql = "SELECT link FROM article WHERE link = ANY(%s)"
+        existing_res = self._execute(check_sql, (all_scraped_links,))
+        existing_links = {row["link"] for row in existing_res.data} if existing_res.data else set()
 
-            for article in channel.articles:
-                art_sql = """
-                    INSERT INTO article (title, link, description, pub_date, channel_id, uuid)
-                    VALUES (%s, %s, %s, %s, %s, %s) ON CONFLICT (link) DO NOTHING
-                    RETURNING id, title, description, pub_date, channel_id
-                """
-                art_params = (
-                    article.title,
-                    article.link,
-                    article.description,
-                    str(article.pub_date),
-                    channel_id,
-                    article.uuid
-                )
-                article_queries.append((art_sql, art_params))
+        final_output = []
+        for channel in channels:
+            db_id = channel_id_map.get(channel.link)
 
-        if article_queries:
-            articles_result = self._execute_transaction_returning(article_queries)
+            new_only = [
+                art for art in channel.articles
+                if art.link not in existing_links
+            ]
 
-            if not articles_result.success:
-                raise DatabaseError(message= articles_result.error_message if articles_result.error_message else "Unknown error", method="update_channels")
+            if new_only:
+                final_output.append((db_id, new_only))
 
-            try:
-                return [ArticleSearchEntry(**row) for row in articles_result.data]
-            except Exception as e:
-                raise MappingError(mapping_error=str(e), method="update_channels")
+        return final_output
 
-        return []
+
+
 
     def get_disabled_channel_ids_for_user(self, consumer_id: int) -> list[int]:
         query = "SELECT channel_id FROM disabled WHERE consumer_id = %s"

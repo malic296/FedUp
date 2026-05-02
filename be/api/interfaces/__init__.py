@@ -3,3 +3,4 @@ from .channel_interface import ChannelInterface
 from .consumer_interface import ConsumerInterface
 from .elastic_search_interface import ElasticSearchInterface
 from .valkey_interface import ValkeyInterface
+from .themes_interface import ThemesInterface

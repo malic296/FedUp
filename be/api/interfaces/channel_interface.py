@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from api.models import Channel, ArticleSearchEntry
+from api.models import Channel, ArticleSearchEntry, Article
 from api.models.scraped_data import ScrapedChannel
 
 class ChannelInterface(ABC):
@@ -12,7 +12,7 @@ class ChannelInterface(ABC):
         ...
 
     @abstractmethod
-    def update_channels(self, channels: list[ScrapedChannel]) -> list[ArticleSearchEntry]:
+    def get_new_articles(self, channels: list[ScrapedChannel]) -> list[tuple[int, list[Article]]]:
         ...
 
     @abstractmethod

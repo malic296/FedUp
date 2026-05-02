@@ -203,3 +203,25 @@ class ArticleRepository(BaseRepository, ArticleInterface):
             )
 
         return liked
+
+    def bulk_save_articles(self, articles: list[Article], channel_id_map: dict[str, int]) -> list[dict]:
+        sql = """
+            INSERT INTO article (uuid, title, link, description, pub_date, channel_id, embedding, theme_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (link) DO NOTHING
+            RETURNING id, title, description, pub_date, channel_id 
+        """
+        params = []
+        for art in articles:
+            c_id = channel_id_map.get(art.channel_link)
+            params.append((
+                art.uuid, art.title, art.link, art.description,
+                art.pub_date, c_id, art.embedding, art.theme_id
+            ))
+
+        res = self._execute_transaction_returning([(sql, p) for p in params])
+        if not res.success:
+            raise DatabaseError(
+                message=res.error_message if res.error_message else "Unknown error",
+                method="bulk_save_articles"
+            )
+        return res.data
