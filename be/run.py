@@ -74,7 +74,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(debug=(settings.config.environment == "dev"), generate_unique_id_function=generate_unique_endpoint_id, lifespan=lifespan)
 
 # MIDDLEWARES
-#app.add_middleware(HTTPSRedirectMiddleware)
+#ml.add_middleware(HTTPSRedirectMiddleware)
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "be", "be:8000", "nginx"])
 app.add_middleware(
     CORSMiddleware,
