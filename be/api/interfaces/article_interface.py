@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
-from api.models import Article, Consumer, PagedArticles
+from api.models import Article, Consumer, PagedArticles, ArticleSearchEntry
 
 class ArticleInterface(ABC):
     @abstractmethod
@@ -21,4 +21,12 @@ class ArticleInterface(ABC):
 
     @abstractmethod
     def get_articles_by_ids(self, consumer: Consumer, ids: list[int]) -> list[Article]:
+        ...
+
+    @abstractmethod
+    def bulk_save_articles(self, articles: list[Article], channel_id_map: dict[str, int]) -> list[ArticleSearchEntry]:
+        ...
+
+    @abstractmethod
+    def assign_new_themes(self, hours_limit: int = 72) -> None:
         ...

@@ -2,17 +2,11 @@ from typing import Optional
 from .base_repository import BaseRepository
 from api.interfaces.article_interface import ArticleInterface
 from datetime import datetime, timezone, timedelta
-from api.models import Consumer, Article, PagedArticles
+from api.models import Consumer, Article, PagedArticles, ArticleSearchEntry
 from api.core.errors import MappingError, DatabaseError
 from api.core.cursor import encode_cursor
 
 class ArticleRepository(BaseRepository, ArticleInterface):
-    def _serialize_embedding(self, embedding: list[float] | None) -> str | None:
-        if embedding is None:
-            return None
-
-        return "[" + ",".join(str(float(value)) for value in embedding) + "]"
-
     def get_articles(self, consumer: Consumer, hours: int, order_by_likes: bool, sort_value: str | int | None, uuid: str | None) -> PagedArticles:
         date_since = datetime.now(timezone.utc) - timedelta(hours=hours)
         inner_query = """
@@ -210,18 +204,32 @@ class ArticleRepository(BaseRepository, ArticleInterface):
 
         return liked
 
-    def bulk_save_articles(self, articles: list[Article], channel_id_map: dict[str, int]) -> list[dict]:
+    def bulk_save_articles(self, articles: list[Article], channel_id_map: dict[str, int]) -> list[ArticleSearchEntry]:
         sql = """
             INSERT INTO article (uuid, title, link, description, pub_date, channel_id, embedding, theme_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (link) DO NOTHING
-            RETURNING id, title, description, pub_date, channel_id 
+            SELECT %s, %s, %s, %s, %s, %s, %s::vector,
+                (
+                    SELECT theme_id FROM article 
+                    WHERE theme_id IS NOT NULL
+                    AND (embedding <=> %s::vector) < 0.9
+                    ORDER BY embedding <=> %s::vector ASC LIMIT 1
+                )
+            ON CONFLICT (link) DO NOTHING
+            RETURNING id, title, description, pub_date, channel_id
         """
         params = []
         for art in articles:
             c_id = channel_id_map.get(art.channel_link)
             params.append((
-                art.uuid, art.title, art.link, art.description,
-                art.pub_date, c_id, self._serialize_embedding(art.embedding), art.theme_id
+                art.uuid,
+                art.title,
+                art.link,
+                art.description,
+                art.pub_date,
+                c_id,
+                art.embedding,
+                art.embedding,
+                art.embedding
             ))
 
         res = self._execute_transaction_returning([(sql, p) for p in params])
@@ -230,4 +238,47 @@ class ArticleRepository(BaseRepository, ArticleInterface):
                 message=res.error_message if res.error_message else "Unknown error",
                 method="bulk_save_articles"
             )
-        return res.data
+
+        return [ArticleSearchEntry(**row) for row in res.data] if res.data else []
+
+    def assign_new_themes(self, hours_limit: int = 72) -> None:
+        since_date = datetime.now(timezone.utc) - timedelta(hours=hours_limit)
+
+        sql = """
+            WITH pairs AS(
+                SELECT a.id AS id1, b.id AS id2
+                FROM article AS a 
+                JOIN article AS b ON (a.embedding <=> b.embedding) < 0.9
+                WHERE 
+                    a.theme_id IS NULL 
+                    AND b.theme_id IS NULL
+                    AND a.id < b.id
+                    AND a.pub_date > %s
+                    AND b.pub_date > %s
+            ),
+            new_themes_to_create AS(
+                SELECT DISTINCT ON (id1)
+                    id1, id2, gen_random_uuid()::text as new_uuid, now() as newest_date
+                FROM pairs
+            ),
+            inserted_themes AS (
+                INSERT INTO theme (uuid, newest_date)
+                SELECT new_uuid, newest_date FROM new_themes_to_create
+                RETURNING id, uuid
+            )
+            UPDATE article
+            SET theme_id = it.id
+            FROM inserted_themes AS it
+            JOIN new_themes_to_create AS ntc ON it.uuid = ntc.new_uuid
+            WHERE article.id = ntc.id1 OR article.id = ntc.id2
+        """
+
+        params = (since_date, since_date, )
+
+        result = self._execute(sql, params)
+
+        if not result.success:
+            raise DatabaseError(
+                message=result.error_message if result.error_message else "Unknown error",
+                method="assign_new_themes"
+            )

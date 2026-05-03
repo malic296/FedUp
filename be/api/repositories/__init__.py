@@ -4,3 +4,4 @@ from .consumer_repository import ConsumerRepository
 from .logging_repository import LoggingRepository
 from .elastic_search_repository import ElasticSearchRepository
 from .valkey_repository import ValkeyRepository
+from .themes_repository import ThemesRepository
