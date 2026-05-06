@@ -207,3 +207,4 @@ marimo/_lsp/
 __marimo__/
 
 /nginx/nginx.local.conf
+/docker-compose.override.yml

@@ -6,8 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.api.v1 import v1_router
 from api.api.dependencies import generate_unique_endpoint_id
 from api.core.container import ServiceContainer
-from api.repositories import ArticleRepository, ChannelRepository, ConsumerRepository, LoggingRepository, ElasticSearchRepository, ValkeyRepository
-from api.services import SecurityService, EmailService, ArticleService, ChannelService, ConsumerService
+from api.repositories import ArticleRepository, ChannelRepository, ConsumerRepository, LoggingRepository, ElasticSearchRepository, ValkeyRepository, ThemesRepository
+from api.services import SecurityService, EmailService, ArticleService, ChannelService, ConsumerService, ThemesService
 from api.core.settings import Settings
 from api.core.middlewares import manage_request
 from api.handlers.exception_handlers import internal_exception_handler, http_exception_handler, unexpected_exception_handler
@@ -34,6 +34,7 @@ async def lifespan(app: FastAPI):
     logging_repository = LoggingRepository(connection_pool=db_pool)
     elastic_search_repository = ElasticSearchRepository(client=elastic_search_client)
     valkey_repository = ValkeyRepository(client=valkey_client)
+    themes_repository = ThemesRepository(connection_pool=db_pool)
 
     # UTIL SERVICES
     security = SecurityService(pepper=settings.pepper, jwt=settings.jwt_secret, valkey=valkey_repository)
@@ -48,6 +49,7 @@ async def lifespan(app: FastAPI):
         security=security,
         email=email,
     )
+    themes_service = ThemesService(themes_repository=themes_repository)
 
     # LOGGER
     db_handler = DatabaseHandler(writer_func=logging_repository.log_to_db)
@@ -62,7 +64,8 @@ async def lifespan(app: FastAPI):
         channel_service=channel_service,
         consumer_service=consumer_service,
         email_service=email,
-        security_service=security
+        security_service=security,
+        themes_service=themes_service
     )
 
     yield

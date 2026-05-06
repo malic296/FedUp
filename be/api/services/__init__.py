@@ -7,3 +7,4 @@ from .logging_service import LoggingService
 from .semantic_service import SemanticService
 from .scraping_service import ScrapingService
 from .update_service import UpdateService
+from .themes_service import ThemesService

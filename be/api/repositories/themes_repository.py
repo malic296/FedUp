@@ -48,15 +48,3 @@ class ThemesRepository(ThemesInterface, BaseRepository):
 
         return list(theme_map.values())
 
-    def create_themes_bulk(self, themes: list[Theme]) -> dict[str, int]:
-        sql = "INSERT INTO theme (uuid, newest_date) VALUES (%s, %s) RETURNING id, uuid"
-        params = [(t.uuid, t.newest_date) for t in themes]
-
-        result = self._execute_transaction_returning([(sql, p) for p in params])
-        if not result.success:
-            raise DatabaseError(
-                message=result.error_message if result.error_message else "Unknown error",
-                method="create_themes_bulk"
-            )
-
-        return {row["uuid"]: row["id"] for row in result.data}

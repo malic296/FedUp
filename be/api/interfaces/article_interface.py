@@ -12,7 +12,7 @@ class ArticleInterface(ABC):
         ...
     
     @abstractmethod
-    def article_uuid_to_id(self, article_uuid: str) -> Optional[int]:
+    def get_articles_by_ids(self, consumer: Consumer, ids: list[int]) -> list[Article]:
         ...
 
     @abstractmethod
@@ -20,7 +20,7 @@ class ArticleInterface(ABC):
         ...
 
     @abstractmethod
-    def get_articles_by_ids(self, consumer: Consumer, ids: list[int]) -> list[Article]:
+    def article_uuid_to_id(self, article_uuid: str) -> Optional[int]:
         ...
 
     @abstractmethod
