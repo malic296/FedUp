@@ -3,7 +3,7 @@ from flask import render_template, request, redirect, url_for
 from web.decorators import authorized
 from web.dependencies.services import get_services
 from . import main
-from .forms import FilterForm, ChannelFilterForm
+from .forms import FilterForm, ChannelFilterForm, ThemesFilterForm
 
 @main.route("/articles", methods=["GET", "POST"])
 @authorized
@@ -101,6 +101,67 @@ def articles():
         current_query=query
     )
 
+@main.route("/themes", methods=["GET", "POST"])
+@authorized
+def themes():
+    services = get_services()
+    form = ThemesFilterForm()
+
+    cursor = request.args.get("cursor", None)
+    cursor = None if cursor == "None" else cursor
+    history_raw = request.args.get("history", "[]")
+    page = int(request.args.get("page", 1))
+
+    try:
+        cursor_history = json.loads(history_raw)
+    except (TypeError, json.JSONDecodeError):
+        cursor_history = []
+
+    if form.validate_on_submit():
+        hours = int(form.hours.data)
+    else:
+        hours = int(request.args.get("hours", 36))
+        form.hours.data = hours
+
+    result = services.themes.read_themes(
+        hours=hours,
+        cursor=cursor,
+        page=page
+
+    )
+
+    base_params = {"hours": hours}
+    has_previous = cursor is not None
+
+    prev_page_url = None
+    if has_previous:
+        prev_page_cursor = cursor_history[-1] if cursor_history else None
+        prev_history = cursor_history[:-1] if cursor_history else []
+        prev_page_url = url_for(
+            "main.themes",
+            cursor=prev_page_cursor,
+            history=json.dumps(prev_history),
+            **base_params
+        )
+
+    next_page_url = None
+    if result.has_more and result.next_cursor:
+        next_page_url = url_for(
+            "main.themes",
+            hours=hours,
+            cursor=result.next_cursor,
+            history=json.dumps(cursor_history + [cursor] if cursor else [])
+        )
+
+    return render_template(
+        "main/themes.html",
+        themes=result.themes,
+        filter_form=form,
+        next_page_url=next_page_url,
+        prev_page_url=prev_page_url,
+        has_previous=has_previous,
+        has_more=result.has_more
+    )
 
 @main.route("/article/<uuid>", methods = ["GET", "POST"])
 def article(uuid):

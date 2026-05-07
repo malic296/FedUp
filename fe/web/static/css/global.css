@@ -77,3 +77,20 @@ input[type=number] {
     background-color: rgba(var(--bulma-primary-rgb), 0.1) !important;
     color: var(--bulma-primary) !important;
 }
+
+.tabs.is-toggle li.is-active a {
+    background-color: #009b86 !important;
+    border-color: #008b76 !important;
+    color: #ffffff !important;
+}
+
+.tabs.is-toggle li a {
+    border-color: #333;
+    color: #b5b5b5;
+}
+
+.tabs.is-toggle li a:hover {
+    border-color: #009b86;
+    color: #009b86;
+    background-color: transparent;
+}

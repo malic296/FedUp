@@ -13,9 +13,16 @@ class ThemesService:
 
         themes: list[Theme] = self.themes.read_themes(consumer_id = consumer.id, hours = hours, sort_value=sort_value, uuid=uuid)
         has_more = len(themes) > 10
+        display_themes = themes[:10] if has_more else themes
+
+        next_cursor=None
+        if has_more and display_themes:
+            last_item = display_themes[-1]
+            next_cursor = encode_cursor(sort_value=last_item.newest_date, uuid=last_item.uuid)
+
         return PagedThemes(
             themes=themes,
-            next_cursor=encode_cursor(sort_value=sort_value, uuid=uuid) if has_more else None,
+            next_cursor=next_cursor,
             has_more=has_more,
             next_page=2 if not page else page + 1 if has_more else None
         )

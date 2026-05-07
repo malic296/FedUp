@@ -1,0 +1,62 @@
+{% macro render_themes(themes) %}
+    {% for theme in themes %}
+    <div class="theme-card mb-6" x-data="{ activeTab: 0 }">
+        <div class="tabs is-toggle is-small mb-0">
+            <ul>
+                {% for article in theme.articles %}
+                <li :class="activeTab === {{ loop.index0 }} ? 'is-active' : ''">
+                    <a @click="activeTab = {{ loop.index0 }}" class="px-3">
+                        <figure class="image is-24x24 mr-2">
+                            <img src="{{ article.channel_logo }}" class="is-rounded" alt="logo" onerror="this.src='/static/img/default-logo.png'">
+                        </figure>
+                        <span class="is-hidden-mobile has-text-weight-semibold">
+                            {{ article.channel_link | replace('https://', '') | replace('www.', '') | truncate(15) }}
+                        </span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="box p-5 is-shadowless" style="border: 1px solid #333; border-radius: 0 0 4px 4px; background: transparent;">
+            {% for article in theme.articles %}
+            <div x-show="activeTab === {{ loop.index0 }}" x-transition:enter.duration.300ms>
+                <div class="is-flex is-align-items-center mb-3">
+                    <span class="tag is-dark is-rounded is-small mr-2 has-text-primary">
+                        {{ article.pub_date.strftime('%H:%M %d.%m.') if article.pub_date else 'Nedávno' }}
+                    </span>
+                    <a href="{{ article.channel_link }}" class="is-size-7 has-text-primary has-text-weight-bold" target="_blank">
+                        {{ article.channel_link | truncate(40) }}
+                    </a>
+                </div>
+
+                <h3 class="title is-4 mb-3">{{ article.title }}</h3>
+
+                <p class="content is-size-6 mb-4">
+                    {{ article.description | striptags | truncate(400) }}
+                </p>
+
+                <div class="level is-mobile">
+                    <div class="level-left">
+                        <div class="level-item">
+                            <span class="icon-text has-text-primary">
+                                <span class="icon is-small"><i class="fas fa-heart"></i></span>
+                                <span class="has-text-weight-bold">{{ article.likes }}</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="level-right">
+                        <div class="buttons">
+                            <a href="{{ article.link }}" target="_blank" class="button is-small is-primary is-outlined is-rounded has-text-weight-bold">
+                                <span>Otevřít článek</span>
+                                <span class="icon is-small"><i class="fas fa-external-link-alt"></i></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+{% endmacro %}

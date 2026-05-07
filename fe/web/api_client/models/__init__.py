@@ -11,7 +11,9 @@ from .consumer_response import ConsumerResponse
 from .http_validation_error import HTTPValidationError
 from .like_response import LikeResponse
 from .paged_articles_dto import PagedArticlesDTO
+from .paged_themes_dto import PagedThemesDTO
 from .registration_dto import RegistrationDTO
+from .theme_dto import ThemeDTO
 from .token_response import TokenResponse
 from .update_credentials_dto import UpdateCredentialsDTO
 from .validation_error import ValidationError
@@ -29,7 +31,9 @@ __all__ = (
     "HTTPValidationError",
     "LikeResponse",
     "PagedArticlesDTO",
+    "PagedThemesDTO",
     "RegistrationDTO",
+    "ThemeDTO",
     "TokenResponse",
     "UpdateCredentialsDTO",
     "ValidationError",

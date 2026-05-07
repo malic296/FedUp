@@ -1,0 +1,90 @@
+{% extends "layouts/main.html" %}
+{% block title %} Témata {% endblock %}
+{% from "macros/themes.html" import render_themes %}
+
+{% block content %}
+<section class="section">
+    <div class="container is-max-desktop">
+        <div class="level is-mobile mb-6 pb-5" style="border-bottom: 1px solid #333;">
+            <div class="level-left">
+                <div class="level-item">
+                    <div>
+                        <h1 class="title is-3 has-text-primary is-uppercase mb-1">Témata</h1>
+                        <p class="is-size-7">
+                            <span class="icon is-small"><i class="fas fa-layer-group"></i></span>
+                            Zprávy seskupené podle souvislostí
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="level-right">
+                <form method="POST" action="{{ url_for('main.themes') }}">
+                    {{ filter_form.hidden_tag() }}
+                    <div class="field">
+                        <label class="label is-small has-text-grey-light">Historie (hod)</label>
+                        <div class="field has-addons">
+                            <div class="control has-icons-left">
+                                {# Remove is-rounded from here #}
+                                {{ filter_form.hours(class="input is-small", style="width:70px; border-top-left-radius: 290486px; border-bottom-left-radius: 290486px;") }}
+                                <span class="icon is-small is-left">
+                                    <i class="fas fa-clock"></i>
+                                </span>
+                            </div>
+                            <div class="control">
+                                {# Remove is-rounded from here #}
+                                <button type="submit" class="button is-small is-primary is-outlined" style="border-top-right-radius: 290486px; border-bottom-right-radius: 290486px;">
+                                    <span class="icon is-small">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if themes %}
+            {{ render_themes(themes) }}
+        {% else %}
+            <div class="notification is-light has-text-centered py-6">
+                <p class="title is-5">Žádná témata k zobrazení</p>
+                <p>Zkuste zvýšit časový rozsah v historii.</p>
+            </div>
+        {% endif %}
+
+        <div class="level mt-6 pt-5" style="border-top: 1px solid #333;">
+            <div class="level-left">
+                <div class="level-item">
+                    {% if has_previous %}
+                        <a href="{{ prev_page_url }}" class="button is-small is-rounded is-primary is-outlined">
+                            <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
+                            <span>Předchozí</span>
+                        </a>
+                    {% else %}
+                        <button class="button is-small is-rounded is-outlined" disabled>
+                            <span class="icon is-small"><i class="fas fa-arrow-left"></i></span>
+                            <span>Předchozí</span>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="level-right">
+                <div class="level-item">
+                    {% if has_more and next_page_url %}
+                        <a href="{{ next_page_url }}" class="button is-small is-rounded is-primary is-outlined">
+                            <span>Další témata</span>
+                            <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
+                        </a>
+                    {% else %}
+                        <button class="button is-small is-rounded is-outlined" disabled>
+                            <span>Další témata</span>
+                            <span class="icon is-small"><i class="fas fa-arrow-right"></i></span>
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -35,6 +35,10 @@
                         <span class="icon"><i class="fas fa-rss"></i></span>
                         <span>Kanály</span>
                     </a>
+                    <a href="{{ url_for('main.themes') }}" class="navbar-item {{ 'is-active' if request.endpoint == 'main.themes' }}">
+                        <span class="icon"><i class="fas fa-boxes"></i></i></span>
+                        <span>Témata</span>
+                    </a>
                 </div>
 
                 <div class="navbar-end">
@@ -96,6 +100,8 @@
     <script src="/static/js/channels.js"></script>
     <script src="/static/js/brightness_mode.js"></script>
     <script src="/static/js/flash_messages.js"></script>
+
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     {% block scripts %} {% endblock %}
 </body>

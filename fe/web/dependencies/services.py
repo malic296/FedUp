@@ -1,7 +1,9 @@
 from web.models import ServiceContainer
-from web.services import ArticlesService, ChannelsService, ConsumersService
+from web.services import ArticlesService, ChannelsService, ConsumersService, ThemesService
 from flask import request, current_app
 from web.api_client.client import AuthenticatedClient, Client
+from web.services.themes_service import ThemesService
+
 
 def get_services() -> ServiceContainer:
     token= request.cookies.get("access_token")
@@ -21,7 +23,8 @@ def get_services() -> ServiceContainer:
     services = ServiceContainer(
         articles=ArticlesService(client),
         channels=ChannelsService(client),
-        consumers=ConsumersService(client)
+        consumers=ConsumersService(client),
+        themes=ThemesService(client)
     )
 
     return services
