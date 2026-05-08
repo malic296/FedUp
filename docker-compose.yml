@@ -68,22 +68,6 @@ services:
     volumes:
       - modelcache:/model-cache
 
-  updater:
-    image: malic466/news-be
-    restart: unless-stopped
-    command: python update_worker.py
-    env_file:
-      - .env
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      elasticsearch:
-        condition: service_healthy
-    volumes:
-      - modelcache:/model-cache
-
   fe:
     build:
       context: .
@@ -116,6 +100,36 @@ services:
     volumes:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
+
+  update-runner:
+    image: malic466/news-be
+    restart: unless-stopped
+    command: sleep infinity
+    volumes:
+      - modelcache:/model-cache
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    labels:
+      ofelia.enabled: "true"
+      ofelia.job-exec.news-update.schedule: "@every 30s"
+      ofelia.job-exec.news-update.command: "python update.py"
+      ofelia.job-exec.news-update.no-overlap: "true"
+
+  ofelia:
+    image: mcuadros/ofelia:latest
+    restart: unless-stopped
+    command: daemon --docker
+    depends_on:
+      - update-runner
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 
   migrate:
     image: malic466/news-be

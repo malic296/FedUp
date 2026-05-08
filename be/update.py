@@ -45,8 +45,10 @@ async def main() -> None:
 
     except AppError as e:
         logging.getLogger(__name__).error(e.internal_message, extra={'exception': e})
+        raise
     except Exception as e:
         logging.getLogger(__name__).error("UNEXPECTED ERROR: " + str(e), extra={'exception': e})
+        raise
     finally:
         db_pool.close()
 

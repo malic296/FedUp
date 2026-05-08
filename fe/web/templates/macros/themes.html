@@ -10,7 +10,7 @@
                             <img src="{{ article.channel_logo }}" class="is-rounded" alt="logo" onerror="this.src='/static/img/default-logo.png'">
                         </figure>
                         <span class="is-hidden-mobile has-text-weight-semibold">
-                            {{ article.channel_link | replace('https://', '') | replace('www.', '') | truncate(15) }}
+                            {{ article.channel_link | replace('https://', '') | replace('http://', '') | replace('/', '') }}
                         </span>
                     </a>
                 </li>
@@ -26,14 +26,14 @@
                         {{ article.pub_date.strftime('%H:%M %d.%m.') if article.pub_date else 'Nedávno' }}
                     </span>
                     <a href="{{ article.channel_link }}" class="is-size-7 has-text-primary has-text-weight-bold" target="_blank">
-                        {{ article.channel_link | truncate(40) }}
+                        {{ article.channel_link | replace('https://', '') | replace('http://', '') | replace('/', '') }}
                     </a>
                 </div>
 
                 <h3 class="title is-4 mb-3">{{ article.title }}</h3>
 
                 <p class="content is-size-6 mb-4">
-                    {{ article.description | striptags | truncate(400) }}
+                    {{ article.description }}
                 </p>
 
                 <div class="level is-mobile">

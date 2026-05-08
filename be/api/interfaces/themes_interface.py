@@ -5,3 +5,7 @@ class ThemesInterface(ABC):
     @abstractmethod
     def read_themes(self, consumer_id: int, sort_value: str | None, uuid: str | None, hours: int = 72)  -> list[Theme]:
         ...
+
+    @abstractmethod
+    def get_all_themes(self, hours: int) -> list[Theme]:
+        ...

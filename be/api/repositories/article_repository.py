@@ -204,135 +204,35 @@ class ArticleRepository(BaseRepository, ArticleInterface):
 
         return liked
 
-    def bulk_save_articles(self, articles: list[Article], channel_id_map: dict[str, int]) -> list[ArticleSearchEntry]:
+    def get_unthemed_articles(self, hours: int) -> list[Article]:
+        since_date = datetime.now(timezone.utc) - timedelta(hours=hours)
         sql = """
-              INSERT INTO article (uuid, title, link, description, pub_date, channel_id, embedding, theme_id)
-              SELECT %s, %s, %s, %s, %s, %s, %s::vector, 
-                  (
-                      SELECT a.theme_id 
-                      FROM article AS a 
-                      WHERE a.theme_id IS NOT NULL 
-                        AND a.embedding IS NOT NULL 
-                        AND a.channel_id <> %s 
-                        AND (a.embedding <=> %s::vector) < 0.20
-                      ORDER BY a.embedding <=> %s::vector ASC
-                      LIMIT 1
-                  )
-              ON CONFLICT (link) DO NOTHING
-              RETURNING id, title, description, pub_date, channel_id 
-              """
-        params = []
-        for art in articles:
-            c_id = channel_id_map.get(art.channel_link)
-            params.append((
-                art.uuid,
-                art.title,
-                art.link,
-                art.description,
-                art.pub_date,
-                c_id,
-                art.embedding,
-                c_id,
-                art.embedding,
-                art.embedding
-            ))
-
-        res = self._execute_transaction_returning([(sql, p) for p in params])
-        if not res.success:
-            raise DatabaseError(
-                message=res.error_message if res.error_message else "Unknown error",
-                method="bulk_save_articles"
-            )
-
-        return [ArticleSearchEntry(**row) for row in res.data] if res.data else []
-
-    def assign_new_themes(self, hours_limit: int = 72) -> None:
-        since_date = datetime.now(timezone.utc) - timedelta(hours=hours_limit)
-
-        sql = """
-            WITH RECURSIVE
-            candidates AS (
-                SELECT id, channel_id, embedding, pub_date
-                FROM article
-                WHERE theme_id IS NULL
-                  AND embedding IS NOT NULL
-                  AND pub_date > %s
-            ),
-    
-            edges AS (
-                SELECT a.id AS id1, b.id AS id2
-                FROM candidates AS a
-                JOIN candidates AS b
-                  ON a.id < b.id
-                 AND a.channel_id <> b.channel_id
-                 AND (a.embedding <=> b.embedding) < 0.20
-            ),
-                
-            undirected_edges AS (
-                SELECT id1, id2 FROM edges
-                UNION
-                SELECT id2, id1 FROM edges
-            ),
-    
-            connected(seed_id, article_id) AS (
-                SELECT id, id
-                FROM candidates
-    
-                UNION
-    
-                SELECT c.seed_id, e.id2
-                FROM connected AS c
-                JOIN undirected_edges AS e ON e.id1 = c.article_id
-            ),
-                
-            article_components AS (
-                SELECT
-                    article_id,
-                    MIN(seed_id) AS component_id
-                FROM connected
-                GROUP BY article_id
-            ),
-    
-            valid_components AS (
-                SELECT component_id
-                FROM article_components
-                GROUP BY component_id
-                HAVING COUNT(*) >= 2
-            ),
-                
-            new_themes_to_create AS (
-                SELECT
-                    vc.component_id,
-                    gen_random_uuid()::text AS new_uuid,
-                    MAX(a.pub_date) AS newest_date
-                FROM valid_components AS vc
-                JOIN article_components AS ac ON ac.component_id = vc.component_id
-                JOIN article AS a ON a.id = ac.article_id
-                GROUP BY vc.component_id
-            ),
-    
-            inserted_themes AS (
-                INSERT INTO theme (uuid, newest_date)
-                SELECT new_uuid, newest_date
-                FROM new_themes_to_create
-                RETURNING id, uuid
-            )
-
-            UPDATE article AS a
-            SET theme_id = it.id
-            FROM inserted_themes AS it
-            JOIN new_themes_to_create AS ntc ON ntc.new_uuid = it.uuid
-            JOIN article_components AS ac ON ac.component_id = ntc.component_id
-            WHERE a.id = ac.article_id
-              AND a.theme_id IS NULL
+            SELECT a.id AS id, 
+            a.uuid as uuid, 
+            a.title as title, 
+            a.description as description, 
+            a.link as link, 
+            a.pub_date as pub_date, 
+            a.embedding as embedding,
+            c.link as channel_link,
+            COUNT(l.id) AS likes
+            FROM article AS a 
+            JOIN channel AS c ON c.id = a.channel_id 
+            LEFT JOIN likes on l.article_id = a.id
+            WHERE a.pub_date >= %s AND a.theme_id IS NULL
+            GROUP BY a.id, c.link
         """
 
-        params = (since_date, )
-
+        params = (since_date,)
         result = self._execute(sql, params)
 
         if not result.success:
             raise DatabaseError(
                 message=result.error_message if result.error_message else "Unknown error",
-                method="assign_new_themes"
+                method="get_unthemed_articles"
             )
+
+        try:
+            return [Article(**row) for row in (result.data if result.data else [])]
+        except Exception as e:
+            raise MappingError(mapping_error=str(e), method="get_unthemed_articles")

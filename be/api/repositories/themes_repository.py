@@ -73,3 +73,53 @@ class ThemesRepository(ThemesInterface, BaseRepository):
 
         return list(theme_map.values())
 
+    def get_all_themes(self, hours: int) -> list[Theme]:
+        since_date = datetime.now(timezone.utc) - timedelta(hours=hours)
+        sql = """
+            SELECT 
+                t.id AS theme_id, t.uuid AS theme_uuid, t.newest_date AS newest_date,
+                a.id AS id,
+                a.uuid as uuid, 
+                a.title as title, 
+                a.description as description, 
+                a.link as link, 
+                a.pub_date as pub_date, 
+                a.embedding as embedding,
+                c.logo_url  AS channel_logo, 
+                c.link as channel_link,
+                (SELECT COUNT(*) FROM likes WHERE article_id = a.id) AS likes
+            FROM theme AS t
+            JOIN article AS a ON a.theme_id = t.id
+            LEFT JOIN channel AS c ON a.channel_id = c.id
+            WHERE t.newest_date >= %s
+        """
+
+        result = self._execute(sql, (since_date,))
+        if not result.success:
+            raise DatabaseError(
+                message=result.error_message if result.error_message else "Unknown error",
+                method="get_all_themes"
+            )
+
+        themes_map = {}
+        for row in result.data if result.data else []:
+            if not themes_map.get(row["theme_id"]):
+                themes_map[row["theme_id"]] = Theme(id=row["theme_id"], uuid=row["theme_uuid"], newest_date=row["newest_date"], articles=[])
+
+            themes_map[row["theme_id"]].articles.append(
+                Article(
+                    id=row["id"],
+                    uuid=row["uuid"],
+                    title=row["title"],
+                    description=row["description"],
+                    link=row["link"],
+                    pub_date=row["pub_date"],
+                    embedding=row["embedding"],
+                    channel_link=row["channel_link"],
+                    channel_logo=row["channel_logo"],
+                    likes=row["likes"])
+            )
+
+        return list(themes_map.values())
+
+

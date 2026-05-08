@@ -24,9 +24,5 @@ class ArticleInterface(ABC):
         ...
 
     @abstractmethod
-    def bulk_save_articles(self, articles: list[Article], channel_id_map: dict[str, int]) -> list[ArticleSearchEntry]:
-        ...
-
-    @abstractmethod
-    def assign_new_themes(self, hours_limit: int = 72) -> None:
+    def get_unthemed_articles(self, hours: int) -> list[Article]:
         ...
