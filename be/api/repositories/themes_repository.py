@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta, timezone
-from api.core.errors import DatabaseError
+from api.core.errors import DatabaseError, MappingError
 from api.interfaces import ThemesInterface
-from api.models import Theme, Article, PagedThemes
+from api.models import Theme, Article, PagedThemes, ArticleWithChannelID
 from api.repositories.base_repository import BaseRepository
+from models import ArticleSearchEntry
+
 
 class ThemesRepository(ThemesInterface, BaseRepository):
     def read_themes(self, consumer_id: int, sort_value: str | None, uuid: str | None, hours: int = 72) -> list[Theme]:
@@ -73,24 +75,15 @@ class ThemesRepository(ThemesInterface, BaseRepository):
 
         return list(theme_map.values())
 
-    def get_all_themes(self, hours: int) -> list[Theme]:
+    def get_all_themes_without_articles(self, hours: int) -> list[Theme]:
         since_date = datetime.now(timezone.utc) - timedelta(hours=hours)
         sql = """
             SELECT 
-                t.id AS theme_id, t.uuid AS theme_uuid, t.newest_date AS newest_date,
-                a.id AS id,
-                a.uuid as uuid, 
-                a.title as title, 
-                a.description as description, 
-                a.link as link, 
-                a.pub_date as pub_date, 
-                a.embedding as embedding,
-                c.logo_url  AS channel_logo, 
-                c.link as channel_link,
-                (SELECT COUNT(*) FROM likes WHERE article_id = a.id) AS likes
+                t.id AS theme_id, 
+                t.uuid AS theme_uuid, 
+                t.newest_date AS newest_date, 
+                t.centroid_embedding AS centroid
             FROM theme AS t
-            JOIN article AS a ON a.theme_id = t.id
-            LEFT JOIN channel AS c ON a.channel_id = c.id
             WHERE t.newest_date >= %s
         """
 
@@ -101,25 +94,62 @@ class ThemesRepository(ThemesInterface, BaseRepository):
                 method="get_all_themes"
             )
 
-        themes_map = {}
-        for row in result.data if result.data else []:
-            if not themes_map.get(row["theme_id"]):
-                themes_map[row["theme_id"]] = Theme(id=row["theme_id"], uuid=row["theme_uuid"], newest_date=row["newest_date"], articles=[])
+        return [Theme(**row) for row in result.data] if result.data else []
 
-            themes_map[row["theme_id"]].articles.append(
-                Article(
-                    id=row["id"],
-                    uuid=row["uuid"],
-                    title=row["title"],
-                    description=row["description"],
-                    link=row["link"],
-                    pub_date=row["pub_date"],
-                    embedding=row["embedding"],
-                    channel_link=row["channel_link"],
-                    channel_logo=row["channel_logo"],
-                    likes=row["likes"])
+    def add_articles_to_existing_themes(self, new_themed_articles: list[ArticleWithChannelID]) -> list[ArticleSearchEntry]:
+        if not new_themed_articles:
+            return []
+
+        insert_sql = """
+            WITH inserted AS (
+                INSERT INTO article (id, uuid, title, description, link, pub_date, embedding, channel_id, theme_id)
+                VALUES 
+                """ + ", ".join([
+                    "(%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                    for _ in new_themed_articles
+                ]) + """
+                RETURNING id, title, description, pub_date, channel_id, theme_id
+            ),
+            updated AS (
+                UPDATE theme AS t
+                SET centroid_embedding = sub.avg_embedding
+                FROM (
+                    SELECT theme_id, AVG(embedding) AS avg_embedding
+                    FROM inserted 
+                    GROUP BY theme_id
+                ) AS sub
+                WHERE t.id = sub.theme_id
+            )
+            SELECT * FROM inserted;
+        """
+
+        params = []
+        for article in new_themed_articles:
+            params.extend([
+                article.id,
+                article.uuid,
+                article.title,
+                article.description,
+                article.link,
+                article.pub_date,
+                article.embedding,
+                article.channel_id,
+                article.theme_id,
+            ])
+
+        result = self._execute(insert_sql, tuple(params))
+
+        if not result.success:
+            raise DatabaseError(
+                message=result.error_message if result.error_message else "Unknown error",
+                method="add_articles_to_existing_theme"
             )
 
-        return list(themes_map.values())
+        try:
+            return [ArticleSearchEntry(id=row["id"], title=row["title"], description=row["description"], pub_date=row["pub_date"], channel_id=row["channel_id"]) for row in result.data] if result.data else []
+        except Exception as e:
+            raise MappingError(mapping_error=str(e), method="add_articles_to_existing_theme")
+
+
 
 

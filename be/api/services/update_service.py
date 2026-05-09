@@ -1,6 +1,10 @@
+from dataclasses import asdict
+
 from api.interfaces import ElasticSearchInterface, ArticleInterface, ChannelInterface, ThemesInterface
 from api.services import SemanticService
-from api.models import ThemeCandidate
+from api.models import ThemeCandidates
+from models import ArticleWithChannelID
+
 
 class UpdateService:
     def __init__(self, scraping_service, themes: ThemesInterface, articles: ArticleInterface, channels: ChannelInterface, elasticsearch: ElasticSearchInterface, semantics: SemanticService):
@@ -15,59 +19,69 @@ class UpdateService:
         channels = await self.scraping_service.fetch_channels(feeds=channel_urls, hours=hours)
         new_data = self.channels.get_new_articles(channels)
 
-        candidates: list[ThemeCandidate] = []
-        themes = self.themes.get_all_themes(hours=hours)
+        new_articles_unthemed: list[ArticleWithChannelID] = []
+        new_articles_themed: list[ArticleWithChannelID] = []
+        themes = self.themes.get_all_themes_without_articles(hours=hours)
+
         for channel_id, articles in new_data:
             for article in articles:
-                if article.embedding is None:
+                if not article.embedding:
                     normalized_text = self.semantics.normalize_text(article.title + " " + article.description)
                     article.embedding = self.semantics.create_embedding(normalized_text)
 
-                theme_id = None
                 for theme in themes:
-                    for themed_article in theme.articles:
-                        if self.semantics.get_similarity_percentage(themed_article.embedding, article.embedding) > 75:
-                            theme_id = theme.id
-                            break
-
-                    if theme_id:
+                    if self.semantics.get_similarity_percentage(article.embedding, theme.centroid) > 75:
+                        article.theme_id = theme.id
                         break
 
-                candidates.append(
-                    ThemeCandidate(
-                        channel_id=channel_id,
-                        new_article=article,
-                        unthemed_articles = [],
-                        existing_theme_id=theme_id
-                    )
-                )
+                article_with_channel_id = ArticleWithChannelID(**asdict(article))
+                article_with_channel_id.channel_id = channel_id
+
+                if article_with_channel_id.theme_id:
+                    new_articles_themed.append(article_with_channel_id)
+                else:
+                    new_articles_unthemed.append(article_with_channel_id)
+
+        candidates: list[ThemeCandidates] = []
+        for article in new_articles_unthemed:
+            placed = False
+            for candidate in candidates:
+                for grouped_article in candidate.new_articles:
+                    if self.semantics.get_similarity_percentage(grouped_article.embedding, article.embedding) > 75:
+                        candidate.new_articles.append(article)
+                        placed = True
+                        break
+
+                if placed:
+                    break
+
+            if not placed:
+                candidates.append(ThemeCandidates(new_articles = [article], unthemed_articles = []))
 
         unthemed_articles = self.articles.get_unthemed_articles(hours=hours)
 
-        for candidate in candidates:
-            for unthemed_article in unthemed_articles:
-                if self.semantics.get_similarity_percentage(candidate.new_article.embedding, unthemed_article.embedding) > 75:
-                    candidate.unthemed_articles.append(unthemed_article)
-                    unthemed_articles.remove(unthemed_article)
-
-            for theme in themes:
-                for article in theme.articles:
-                    if self.semantics.get_similarity_percentage(candidate.new_article.embedding, article.embedding) > 75:
-                        candidate.existing_theme_id = theme.id
+        for unthemed_article in unthemed_articles:
+            unthemed_article_matched = False
+            for candidate in candidates:
+                for new_article in candidate.new_articles:
+                    if self.semantics.get_similarity_percentage(new_article.embedding, unthemed_article.embedding) > 75:
+                        candidate.unthemed_articles.append(unthemed_article)
+                        unthemed_article_matched = True
                         break
 
-                if candidate.existing_theme_id:
+                if unthemed_article_matched:
                     break
 
+        # save new articles to existing themes and update themes centroid
+        self.themes.add_articles_to_existing_themes(new_themed_articles=new_articles_themed)
+
+        #TODO:
+        # calculate centroid embedding for new theme -> create new theme -> get theme_id -> create candidate.new_articles with theme_id -> assign theme_id to candidate.unthemed_articles
+            # also return ArticleSearchQuery from the candidate.new_articles
 
 
-
-
-
-
-        self.elasticsearch.save_article_entries(es_entries_to_save)
-
-        self.articles.assign_new_themes(hours_limit=72)
+        #self.elasticsearch.save_article_entries(es_entries_to_save)
+        #self.articles.assign_new_themes(hours_limit=72)
 
 
 

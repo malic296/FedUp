@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from api.models import Theme
+from models import ArticleWithChannelID, ArticleSearchEntry
+
 
 class ThemesInterface(ABC):
     @abstractmethod
@@ -7,5 +9,9 @@ class ThemesInterface(ABC):
         ...
 
     @abstractmethod
-    def get_all_themes(self, hours: int) -> list[Theme]:
+    def get_all_themes_without_articles(self, hours: int) -> list[Theme]:
+        ...
+
+    @abstractmethod
+    def add_articles_to_existing_themes(self, new_themed_articles: list[ArticleWithChannelID]) -> list[ArticleSearchEntry]:
         ...

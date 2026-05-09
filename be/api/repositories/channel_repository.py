@@ -88,9 +88,6 @@ class ChannelRepository(BaseRepository, ChannelInterface):
 
         return final_output
 
-
-
-
     def get_disabled_channel_ids_for_user(self, consumer_id: int) -> list[int]:
         query = "SELECT channel_id FROM disabled WHERE consumer_id = %s"
         params = (consumer_id,)
