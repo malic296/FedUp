@@ -27,7 +27,7 @@ class RSSParser(FeedParser):
             return None
 
         result = ScrapedChannel(
-            title=channel_title.strip(),
+            title=self.clear_str(channel_title).strip(),
             link=channel_link.strip(),
             uuid=str(uuid.uuid4()),
             logo_url=f"https://s2.googleusercontent.com/s2/favicons?domain={channel_link}",
@@ -59,9 +59,9 @@ class RSSParser(FeedParser):
 
             result.articles.append(
                 Article(
-                    title=i_title.strip(),
+                    title=self.clear_str(i_title).strip(),
                     link=i_link.strip(),
-                    description=i_description.strip(),
+                    description=self.clear_str(i_description).strip(),
                     pub_date=parsed_pubdate,
                     uuid=str(uuid.uuid4()),
                     channel_link=channel_link.strip(),

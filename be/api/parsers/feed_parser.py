@@ -1,11 +1,10 @@
 from abc import ABC, abstractmethod
 import xml.etree.ElementTree as ET
-from api.models.article import Article
 from typing import Optional
 from datetime import datetime, timezone
 from dateutil import parser
 from api.models.scraped_data import ScrapedChannel
-
+from bs4 import BeautifulSoup
 
 class FeedParser(ABC):
     @abstractmethod
@@ -25,3 +24,13 @@ class FeedParser(ABC):
             return dt.astimezone(timezone.utc)
         except ValueError:
             raise ValueError(f"Unknown date format: {date_str}")
+
+    @staticmethod
+    def clear_str(txt: str):
+        soup = BeautifulSoup(txt, "lxml")
+
+        for img in soup(["img", "script", "style", "iframe", "video"]):
+            img.decompose()
+
+        return soup.get_text()
+
