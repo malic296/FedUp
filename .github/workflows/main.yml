@@ -67,7 +67,7 @@ jobs:
             set -e
             cd ~/NewsAggregator
             git pull origin main
-            docker compose pull be fe scheduler
-            docker compose up -d db redis
+            docker compose pull be fe ofelia
+            docker compose up -d db redis elasticsearch
             docker compose run --rm migrate
-            docker compose up -d --remove-orphans be fe nginx scheduler
+            docker compose up -d --remove-orphans be fe nginx update-runner ofelia
