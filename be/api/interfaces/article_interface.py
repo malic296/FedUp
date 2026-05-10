@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
-from api.models import Article, Consumer, PagedArticles, ArticleSearchEntry
+from api.models import Article, Consumer, PagedArticles, ArticleSearchEntry, ArticleWithChannelID
 
 class ArticleInterface(ABC):
     @abstractmethod
@@ -25,4 +25,8 @@ class ArticleInterface(ABC):
 
     @abstractmethod
     def get_unthemed_articles(self, hours: int) -> list[Article]:
+        ...
+
+    @abstractmethod
+    def save_articles_unthemed(self, articles: list[ArticleWithChannelID]) -> list[ArticleSearchEntry]:
         ...

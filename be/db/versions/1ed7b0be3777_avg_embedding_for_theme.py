@@ -21,12 +21,12 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Upgrade schema."""
     op.execute("""
-        UPDATE TABLE theme ADD COLUMN centroid_embedding vector(384);
+        ALTER TABLE theme ADD COLUMN centroid_embedding vector(384);
     """)
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     op.execute("""
-        UPDATE TABLE theme DROP COLUMN centroid_embedding;
+        ALTER TABLE theme DROP COLUMN centroid_embedding;
     """)

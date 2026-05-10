@@ -1,10 +1,9 @@
 from datetime import datetime, timedelta, timezone
 from api.core.errors import DatabaseError, MappingError
 from api.interfaces import ThemesInterface
-from api.models import Theme, Article, PagedThemes, ArticleWithChannelID
+from api.models import Theme, Article, PagedThemes, ArticleWithChannelID, ArticleSearchEntry, ThemeCandidates
 from api.repositories.base_repository import BaseRepository
-from models import ArticleSearchEntry
-
+import uuid
 
 class ThemesRepository(ThemesInterface, BaseRepository):
     def read_themes(self, consumer_id: int, sort_value: str | None, uuid: str | None, hours: int = 72) -> list[Theme]:
@@ -150,6 +149,71 @@ class ThemesRepository(ThemesInterface, BaseRepository):
         except Exception as e:
             raise MappingError(mapping_error=str(e), method="add_articles_to_existing_theme")
 
+    def save_candidates_to_new_themes(self, candidates: list[ThemeCandidates]) -> list[ArticleSearchEntry]:
+        result: list[ArticleSearchEntry] = []
+        for candidate in candidates:
+            newest_date: datetime = max((a.pub_date for a in candidate.new_articles + candidate.unthemed_articles), default=datetime.now(timezone.utc))
+            theme_uuid = str(uuid.uuid4())
 
+            theme_sql = f"""
+                INSERT INTO theme (uuid, newest_date, centroid_embedding) 
+                VALUES (%s, %s, %s) 
+                RETURNING id
+            """
 
+            theme_params = (theme_uuid, newest_date, candidate.centroid)
 
+            theme_result = self._execute(theme_sql, theme_params)
+            if not theme_result.success:
+                raise DatabaseError(
+                    message=theme_result.error_message if theme_result.error_message else "Unknown error",
+                    method="save_candidates_to_new_themes"
+                )
+
+            try:
+                theme_id: int = theme_result.data[0]["id"]
+            except Exception as e:
+                raise MappingError(mapping_error=str(e), method="save_candidates_to_new_themes")
+
+            transactions = []
+
+            for a in candidate.new_articles:
+                transactions.append(
+                    (
+                        "INSERT INTO article(uuid, title, link, description, pub_date, channel_id, embedding, theme_id) VALUES(%s, %s, %s, %s, %s, %s, %s, %s) RETURNING id, title, description, pub_date, channel_id",
+                        (str(uuid.uuid4()), a.title, a.link, a.description, a.pub_date, a.channel_id, a.embedding, theme_id)
+                     )
+                )
+
+            for a in candidate.unthemed_articles:
+                transactions.append(
+                    (
+                        "UPDATE article SET theme_id = %s WHERE id = %s",
+                        (theme_id, a.id)
+                    )
+                )
+
+            bulk_result = self._execute_transaction_returning(transactions)
+
+            if not bulk_result.success:
+                delete_ghost_theme = f"DELETE FROM theme WHERE id = %s"
+                delete_theme_result = self._execute(delete_ghost_theme, (theme_id,))
+
+                if not delete_theme_result.success:
+                    raise DatabaseError(
+                        message=delete_theme_result.error_message + " This fail happened after bulk insert failed while trying to delete the new ghost theme." if delete_theme_result.error_message else "Unknown error",
+                        method="save_candidates_to_new_themes"
+                    )
+
+                raise DatabaseError(
+                    message=bulk_result.error_message if bulk_result.error_message else "Unknown error",
+                    method="save_candidates_to_new_themes"
+                )
+
+            try:
+                new_entries = [ArticleSearchEntry(id=row["id"], title=row["title"], description=row["description"], pub_date=row["pub_date"], channel_id=row["channel_id"]) for row in bulk_result.data] if bulk_result.data else []
+                result.extend(new_entries)
+            except Exception as e:
+                raise MappingError(mapping_error=str(e), method="save_candidates_to_new_themes")
+
+        return result

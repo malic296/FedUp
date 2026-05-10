@@ -1,10 +1,7 @@
 from dataclasses import asdict
-
 from api.interfaces import ElasticSearchInterface, ArticleInterface, ChannelInterface, ThemesInterface
 from api.services import SemanticService
-from api.models import ThemeCandidates
-from models import ArticleWithChannelID
-
+from api.models import ThemeCandidates, ArticleWithChannelID
 
 class UpdateService:
     def __init__(self, scraping_service, themes: ThemesInterface, articles: ArticleInterface, channels: ChannelInterface, elasticsearch: ElasticSearchInterface, semantics: SemanticService):
@@ -73,15 +70,25 @@ class UpdateService:
                     break
 
         # save new articles to existing themes and update themes centroid
-        self.themes.add_articles_to_existing_themes(new_themed_articles=new_articles_themed)
+        matched_with_existing_theme_entries = self.themes.add_articles_to_existing_themes(new_themed_articles=new_articles_themed)
 
-        #TODO:
-        # calculate centroid embedding for new theme -> create new theme -> get theme_id -> create candidate.new_articles with theme_id -> assign theme_id to candidate.unthemed_articles
-            # also return ArticleSearchQuery from the candidate.new_articles
+        clusters: list[ThemeCandidates] = []
+        unmatched: list[ArticleWithChannelID] = []
 
+        # Filter candidates to clusters or unmatched articles
+        for candidate in candidates:
+            if len(candidate.new_articles) == 1 and len(candidate.unthemed_articles) == 0:
+                unmatched.append(candidate.new_articles[0])
+            else:
+                embeddings = [article.embedding for article in candidate.new_articles + candidate.unthemed_articles]
+                candidate.centroid = self.semantics.calculate_centroid_embedding(embeddings)
+                clusters.append(candidate)
 
-        #self.elasticsearch.save_article_entries(es_entries_to_save)
-        #self.articles.assign_new_themes(hours_limit=72)
+        matched_with_unthemed_entries = self.themes.save_candidates_to_new_themes(candidates=clusters)
+
+        unmatched_entries = self.articles.save_articles_unthemed(articles=unmatched)
+
+        self.elasticsearch.save_article_entries(matched_with_existing_theme_entries + matched_with_unthemed_entries + unmatched_entries)
 
 
 

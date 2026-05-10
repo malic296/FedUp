@@ -1,5 +1,6 @@
 from sentence_transformers.util import cos_sim
 from simplemma import lemmatize
+import numpy as np
 
 class SemanticService:
     def __init__(self, embedding_model):
@@ -19,3 +20,14 @@ class SemanticService:
         cosine_score = cos_sim(first_embedding, second_embedding).item()
         percentage = max(0.0, cosine_score) * 100
         return round(percentage, 2)
+
+    def calculate_centroid_embedding(self, embeddings: list[list[float]]) -> list[float]:
+        if not embeddings:
+            raise Exception("Cannot calculate centroid embedding for empty list of embeddings.")
+
+        vectors = np.array(embeddings, dtype=float)
+        centroid = vectors.mean(axis=0)
+
+        return centroid.tolist()
+
+

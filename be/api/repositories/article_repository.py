@@ -2,7 +2,7 @@ from typing import Optional
 from .base_repository import BaseRepository
 from api.interfaces.article_interface import ArticleInterface
 from datetime import datetime, timezone, timedelta
-from api.models import Consumer, Article, PagedArticles, ArticleSearchEntry
+from api.models import Consumer, Article, PagedArticles, ArticleSearchEntry, ArticleWithChannelID
 from api.core.errors import MappingError, DatabaseError
 from api.core.cursor import encode_cursor
 
@@ -218,7 +218,7 @@ class ArticleRepository(BaseRepository, ArticleInterface):
             COUNT(l.id) AS likes
             FROM article AS a 
             JOIN channel AS c ON c.id = a.channel_id 
-            LEFT JOIN likes on l.article_id = a.id
+            LEFT JOIN likes AS l ON l.article_id = a.id
             WHERE a.pub_date >= %s AND a.theme_id IS NULL
             GROUP BY a.id, c.link
         """
@@ -236,3 +236,29 @@ class ArticleRepository(BaseRepository, ArticleInterface):
             return [Article(**row) for row in (result.data if result.data else [])]
         except Exception as e:
             raise MappingError(mapping_error=str(e), method="get_unthemed_articles")
+
+    def save_articles_unthemed(self, articles: list[ArticleWithChannelID]) -> list[ArticleSearchEntry]:
+        if not articles:
+            return []
+
+        sql = """
+            INSERT INTO article (uuid, title, description, link, pub_date, embedding, channel_id) VALUES
+        """ + ", ".join([
+            "(%s, %s, %s, %s, %s, %s, %s)" for _ in range(len(articles))
+        ]) + """
+            RETURNING id, title, description, pub_date, channel_id
+        """
+
+        params = []
+        for article in articles:
+            params.extend([article.uuid, article.title, article.description, article.link, article.pub_date, article.embedding, article.channel_id])
+
+        result = self._execute(sql, tuple(params))
+
+        if not result.success:
+            raise DatabaseError(
+                message=result.error_message if result.error_message else "Unknown error",
+                method="save_articles_unthemed"
+            )
+
+        return [ArticleSearchEntry(**row) for row in result.data] if result.data else []
