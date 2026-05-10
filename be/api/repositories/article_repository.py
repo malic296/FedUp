@@ -221,7 +221,7 @@ class ArticleRepository(BaseRepository, ArticleInterface):
             JOIN channel AS c ON c.id = a.channel_id 
             LEFT JOIN likes AS l ON l.article_id = a.id
             WHERE a.pub_date >= %s AND a.theme_id IS NULL
-            GROUP BY a.id, c.link
+            GROUP BY a.id, c.link, c.logo_url
         """
 
         params = (since_date,)
