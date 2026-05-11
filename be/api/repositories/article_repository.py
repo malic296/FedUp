@@ -133,7 +133,7 @@ class ArticleRepository(BaseRepository, ArticleInterface):
             JOIN channel AS c ON c.id = a.channel_id 
             LEFT JOIN likes as l ON a.id = l.article_id
             WHERE a.uuid = %s
-            GROUP BY a.id, c.link
+            GROUP BY a.id, c.link, c.logo_url
         """
         params = (uuid,)
 
