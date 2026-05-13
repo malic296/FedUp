@@ -208,3 +208,5 @@ __marimo__/
 
 /nginx/nginx.local.conf
 /docker-compose.override.yml
+
+dump.rdb
