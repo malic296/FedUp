@@ -6,6 +6,12 @@ def create_app(config_key):
     web = Flask(__name__)
     web.config.from_object(configs[config_key])
 
+    web.config.update(
+        SESSION_COOKIE_SECURE=True,
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE='Lax',
+    )
+
     register_error_handlers(web)
 
     from web.blueprints import main
