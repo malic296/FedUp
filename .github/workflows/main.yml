@@ -71,3 +71,7 @@ jobs:
             docker compose up -d db redis elasticsearch
             docker compose run --rm migrate
             docker compose up -d --remove-orphans be fe nginx update-runner ofelia
+            
+            docker container prune -f
+            docker image prune -a -f
+            docker system prune -f
